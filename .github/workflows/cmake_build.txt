@@ -1,8 +1,11 @@
-name: Pamplejuce
+name: Build
 
 on:
   workflow_dispatch: # lets you run a build from the UI
   push:
+  # New version tag
+    tags:
+      - 'v*.*.*'
 
 # When pushing new commits, cancel any running builds on that branch
 concurrency:
@@ -51,7 +54,7 @@ jobs:
       # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
       run: |
         sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev xvfb ninja-build
-        # downgrade gcc to workaround 22.04 and C++20 issue 
+        # downgrade gcc to workaround 22.04 and C++20 issue
         # see: https://github.com/actions/runner-images/issues/8659
         sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.6 libc6-dev=2.35-0ubuntu3.6 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
         sudo /usr/bin/Xvfb $DISPLAY &
@@ -100,6 +103,10 @@ jobs:
       with:
         submodules: true # Get JUCE populated
 
+      # Pull git submodules
+    - name: Update submodules
+      run: git submodule update --init --recursive
+
     - name: Cache the build
       uses: mozilla-actions/sccache-action@v0.0.3
 
@@ -135,7 +142,7 @@ jobs:
         echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
         echo "VST3_PATH=$ARTIFACTS_PATH/VST3/${{ env.PRODUCT_NAME }}.vst3" >> $GITHUB_ENV
         echo "AU_PATH=$ARTIFACTS_PATH/AU/${{ env.PRODUCT_NAME }}.component" >> $GITHUB_ENV
-        echo "AUV3_PATH=$ARTIFACTS_PATH/AUv3/${{ env.PRODUCT_NAME }}.appex" >> $GITHUB_ENV          
+        echo "AUV3_PATH=$ARTIFACTS_PATH/AUv3/${{ env.PRODUCT_NAME }}.appex" >> $GITHUB_ENV
         echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
         echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
 
@@ -159,14 +166,14 @@ jobs:
       run: |
         # add the icns as its own icon resource (meta!)
         sips -i packaging/pamplejuce.icns
-        
+
         # Grab the resource, put in tempfile
         DeRez -only icns packaging/pamplejuce.icns > /tmp/icons
-        
+
         # Stuff the resource into the strange Icon? file's resource fork
         Rez -a /tmp/icons -o "${{ env.VST3_PATH }}/Icon"$'\r'
         Rez -a /tmp/icons -o "${{ env.AU_PATH }}/Icon"$'\r'
-        
+
         # Set custom icon attribute
         SetFile -a C "${{ env.VST3_PATH }}"
         SetFile -a C "${{ env.AU_PATH }}"
@@ -178,7 +185,7 @@ jobs:
         python3 -m pip install setuptools
         npm install -g appdmg
         mkdir -p packaging/dmg
-        
+
         # Create directories for the dmg symlinks
         sudo mkdir -m 755 -p /Library/Audio/Plug-Ins/Components && sudo mkdir -m 755 -p /Library/Audio/Plug-Ins/VST3
         ln -s /Library/Audio/Plug-Ins/Components "packaging/dmg/Your Mac's Component folder"
@@ -186,7 +193,7 @@ jobs:
         mv "${{ env.VST3_PATH }}" packaging/dmg
         mv "${{ env.AU_PATH }}" packaging/dmg
         mv "${{ env.STANDALONE_PATH }}" packaging/dmg
-        
+
         # Run appdmg to create the .dmg
         cd packaging && appdmg dmg.json "${{ env.ARTIFACT_NAME}}.dmg"
         codesign -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" --timestamp -i ${{ env.BUNDLE_ID }} --force "${{ env.ARTIFACT_NAME }}.dmg"
@@ -204,7 +211,7 @@ jobs:
       run: |
         iscc "packaging\installer.iss"
         mv "packaging/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
-        dotnet tool install --global AzureSignTool 
+        dotnet tool install --global AzureSignTool
         AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
 
     - name: Upload Exe (Windows)

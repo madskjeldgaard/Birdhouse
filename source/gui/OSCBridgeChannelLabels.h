@@ -5,13 +5,15 @@ class OSCBridgeChannelLabels : public juce::Component
 {
 public:
     enum Labels {
-        RecvPort,
+        TitleLabel,
         Path,
         InputMin,
         InputMax,
+        Activity,
         MidiChannel,
         MidiNum,
         OutputMsgType,
+        Muted,
         NumLabels
     };
 
@@ -29,8 +31,11 @@ public:
             addAndMakeVisible (label.get());
         }
 
-        // RecvPort
-        labels[RecvPort]->setText ("Port", juce::dontSendNotification);
+        // Title / Chan number
+        labels[TitleLabel]->setText ("", juce::dontSendNotification);
+
+        // Activity
+        labels[Activity]->setText ("", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);
@@ -49,6 +54,9 @@ public:
 
         // OutputMsgType
         labels[OutputMsgType]->setText ("MsgType", juce::dontSendNotification);
+
+        // muted
+        labels[Muted]->setText ("", juce::dontSendNotification);
     }
 
     void setFont (const juce::Font& font)
@@ -71,11 +79,30 @@ public:
     {
         // Lay out with equal width from left to right
         auto area = getLocalBounds();
-        auto width = area.getWidth() / 7;
+        auto width = area.getWidth() / NumLabels;
+        auto titleWidth = width / 2;
+        auto muteWidth = width / 2;
 
+        // Readjust total width to account for the title and mute button
+        width = (area.getWidth() - titleWidth - muteWidth) / (NumLabels - 2);
+
+        auto labelNum = 0;
         for (auto& label : labels)
         {
-            label->setBounds (area.removeFromLeft (width));
+            if (labelNum == TitleLabel)
+            {
+                label->setBounds (area.removeFromLeft (titleWidth));
+            }
+            else if (labelNum == Muted)
+            {
+                label->setBounds (area.removeFromLeft (muteWidth));
+            }
+            else
+            {
+                label->setBounds (area.removeFromLeft (width));
+            }
+
+            labelNum++;
         }
     }
 

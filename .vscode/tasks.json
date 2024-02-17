@@ -2,9 +2,35 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build",
+    },
+    {
       "label": "Configure BirdHouse",
       "type": "shell",
       "command": "cmake -S . -B build",
+    },
+    {
+      "label": "Configure BirdHouse for Debug",
+      "type": "shell",
+      "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug",
+    },
+    {
+      "label": "Build BirdHouse for Debug",
+      "type": "shell",
+      "command": "cmake --build build --config Debug",
+      "dependsOn": "Configure BirdHouse for Debug",
+      "group": {
+        "kind": "build"
+      },
+      "problemMatcher": "$gcc",
+    },
+    {
+      "label": "Run Birdhouse Standalone for Debug",
+      "type": "shell",
+      "command": "killall BirdHouse; ./build/BirdHouse_artefacts/Debug/Standalone/BirdHouse.app/Contents/MacOS/BirdHouse",
+      "dependsOn": "Build BirdHouse for Debug",
     },
     {
       "label": "Build BirdHouse",
@@ -15,6 +41,11 @@
         "kind": "build"
       },
       "problemMatcher": "$gcc",
+    },
+    {
+      "label": "Directly run BirdHouse Standalone",
+      "type": "shell",
+      "command": "killall BirdHouse; ./build/BirdHouse_artefacts/Standalone/BirdHouse.app/Contents/MacOS/BirdHouse",
     },
     {
       "label": "Run BirdHouse Standalone",
@@ -31,8 +62,8 @@
     {
       "label": "Build and run BirdHouse VST3 in Reaper",
       "type": "shell",
-      "command": "killall REAPER; open -a REAPER.app/Contents/MacOS/REAPER examples/reaper/BirdHouse.RPP",
+      "command": "killall REAPER;  /Applications/REAPER.app/Contents/MacOS/REAPER examples/reaper/BirdHouse.RPP",
       "dependsOn": "Build BirdHouse",
     },
-  ]
+      ]
 }

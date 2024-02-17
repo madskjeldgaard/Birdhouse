@@ -1,10 +1,12 @@
 #pragma once
 
 #include "BinaryData.h"
-#include "BirdHouseLookAndFeel.h"
 #include "PluginProcessor.h"
-#include "bridge/OSCBridgeChannelEditor.h"
-#include "bridge/OSCBridgeChannelLabels.h"
+#include "bridge/OSCActivityListener.h"
+#include "gui/AboutComponent.h"
+#include "gui/BirdHouseLookAndFeel.h"
+#include "gui/OSCBridgeChannelEditor.h"
+#include "gui/OSCBridgeChannelLabels.h"
 
 //==============================================================================
 class PluginEditor : public juce::AudioProcessorEditor
@@ -22,16 +24,27 @@ private:
     // access the processor object that created it.
     PluginProcessor& processorRef;
 
-    juce::Label titleLabel { "BirdHouse" };
-
-    juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+    // Labels
     std::unique_ptr<BirdHouse::BirdHouseLookAndFeel> lookAndFeel;
-
-    std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
-
+    juce::Label titleLabel { "BirdHouse" }, portLabel { "Port" }, connectionStatusTitleLabel { "Connection Status" }, connectionStatusLabel { "Disconnected" };
     std::unique_ptr<OSCBridgeChannelLabels> oscBridgeChannelLabels;
 
-    // OSCBridgeChannelEditor oscBridgeChannelEditor;
+    // Link to help / info
+    // juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+
+    // Link to help / info
+    AboutComponent aboutComponent;
+    juce::TextButton aboutButton { "?" };
+
+    // Port
+    juce::TextEditor portEditor;
+    // Parameter attachment
+    std::unique_ptr<birdhouse::TextEditorAttachment<int>> portAttachment {
+        std::make_unique<birdhouse::TextEditorAttachment<int>> (processorRef.parameters, portEditor, nullptr)
+    };
+
+    // GUI for each channel
+    std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

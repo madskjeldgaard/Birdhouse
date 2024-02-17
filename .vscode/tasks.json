@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure BirdHouse",
+      "type": "shell",
+      "command": "cmake -S . -B build",
+    },
+    {
+      "label": "Build BirdHouse",
+      "type": "shell",
+      "command": "cmake --build build",
+      "dependsOn": "Configure BirdHouse",
+      "group": {
+        "kind": "build"
+      },
+      "problemMatcher": "$gcc",
+    },
+    {
+      "label": "Run BirdHouse Standalone",
+      "type": "shell",
+      "command": "killall BirdHouse; ./build/BirdHouse_artefacts/Standalone/BirdHouse.app/Contents/MacOS/BirdHouse",
+      "dependsOn": "Build BirdHouse",
+    },
+    {
+      "label": "Validate BirdHouse plugin using pluginval",
+      "type": "shell",
+      "command": "/Applications/pluginval.app/Contents/MacOS/pluginval --validate ./build/BirdHouse_artefacts",
+      "dependsOn": "Build BirdHouse",
+    },
+    {
+      "label": "Build and run BirdHouse VST3 in Reaper",
+      "type": "shell",
+      "command": "killall REAPER; open -a REAPER.app/Contents/MacOS/REAPER examples/reaper/BirdHouse.RPP",
+      "dependsOn": "Build BirdHouse",
+    },
+  ]
+}

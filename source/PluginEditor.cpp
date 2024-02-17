@@ -27,7 +27,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     // Set font for title
     auto font = juce::Font (defaultFontSize * 1.33f, juce::Font::bold);
     titleLabel.setFont (font);
-    titleLabel.setText ("BirdHouse. OSC to MIDI.", juce::dontSendNotification);
+    titleLabel.setText ("BirdHouse. OSC to MIDI. v" VERSION ".", juce::dontSendNotification);
     titleLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
     titleLabel.setVisible (true);
     addAndMakeVisible (titleLabel);

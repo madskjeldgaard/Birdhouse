@@ -18,30 +18,85 @@ public:
         pathEditor.onTextChange = [this] {
             const auto whatChanged = juce::Identifier ("Path");
             updateChannelSettings (whatChanged);
+
+            // Filter the characters
+            // Must start with the "/" character
+            // Must not contain any spaces
+            // Has to be more than 1 character
+
+            auto string = pathEditor.getText();
+
+            if (string.isNotEmpty())
+            {
+                if (string[0] != '/')
+                {
+                    string = "/" + string;
+                }
+
+                if (string.contains (" "))
+                {
+                    string = string.replace (" ", "_");
+                }
+
+                pathEditor.setText (string, false);
+            }
         };
 
         addAndMakeVisible (inputMinEditor);
+        inputMinEditor.setInputRestrictions (5, "0123456789.-");
         inputMinEditor.onTextChange = [this] {
             const auto whatChanged = juce::Identifier ("InputMin");
             updateChannelSettings (whatChanged);
         };
 
         addAndMakeVisible (inputMaxEditor);
+        inputMaxEditor.setInputRestrictions (5, "0123456789.-");
         inputMaxEditor.onTextChange = [this] {
             const auto whatChanged = juce::Identifier ("InputMax");
             updateChannelSettings (whatChanged);
         };
 
         addAndMakeVisible (outputMidiChannelEditor);
+        outputMidiChannelEditor.setInputRestrictions (2, "0123456789");
         outputMidiChannelEditor.onTextChange = [this] {
             const auto whatChanged = juce::Identifier ("OutputMidiChannel");
             updateChannelSettings (whatChanged);
+
+            // Clip to midi range 1-16 for channels
+            auto value = outputMidiChannelEditor.getText().getIntValue();
+
+            if (value < 1)
+            {
+                value = 1;
+            }
+            else if (value > 16)
+            {
+                value = 16;
+            }
+
+            outputMidiChannelEditor.setText (juce::String (value), false);
         };
 
         addAndMakeVisible (outputNumEditor);
+        outputNumEditor.setInputRestrictions (3, "0123456789");
         outputNumEditor.onTextChange = [this] {
             const auto whatChanged = juce::Identifier ("OutputMidiNum");
             updateChannelSettings (whatChanged);
+
+            // Clip to midi range
+            auto value = outputNumEditor.getText().getIntValue();
+
+            // Clip to midi range
+            if (value < 0)
+            {
+                value = 0;
+            }
+            else if (value > 127)
+            {
+                value = 127;
+            }
+
+            outputNumEditor.setText (juce::String (value), false);
         };
 
         outputMsgTypeComboBox.addItem ("Note", OSCBridgeChannel::MidiNote + 1);
@@ -218,9 +273,6 @@ private:
     juce::TextButton muteButton { "Mute" };
 
     juce::ValueTree oscBridgeState;
-
-    // OSCBridgeChannel instance (assuming it's externally managed and passed to this editor)
-    // OSCBridgeChannel* oscChannel;
 
     void updateChannelSettings (auto whatChanged)
     {

@@ -71,9 +71,28 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portEditor.onTextChange = [this] {
         auto newport = portEditor.getText().getIntValue();
         auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
-        juce::Logger::writeToLog ("gUI: New port: " + juce::String (newport));
-        globalSettings.setProperty ("Port", newport, nullptr);
+
+        // Port can only be a number from 0 to 65535
+        // If the port is not a number, set it to 8000
+        // If the port is less than 0, set it to 0
+        // If the port is greater than 65535, set it to 65535
+        // Otherwise, set it to the new value
+        if (newport < 0)
+        {
+            globalSettings.setProperty ("Port", 0, nullptr);
+            portEditor.setText ("0", false);
+        }
+        else if (newport > 65535)
+        {
+            globalSettings.setProperty ("Port", 65535, nullptr);
+            portEditor.setText ("65535", false);
+        }
+        else
+        {
+            globalSettings.setProperty ("Port", newport, nullptr);
+        }
     };
+
     addAndMakeVisible (portEditor);
 
     // Port label

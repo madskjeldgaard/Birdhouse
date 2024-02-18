@@ -4,6 +4,7 @@
 #include "ActivityIndicator.h"
 #include "OSCBridgeChannelLabels.h" // Include your OSCBridgeChannel header here
 #include <juce_gui_basics/juce_gui_basics.h>
+// #include "ToggleTextButton.h"
 
 class OSCBridgeChannelEditor : public juce::Component
 {
@@ -57,6 +58,8 @@ public:
         addAndMakeVisible (muteButton);
         muteButton.setToggleable (true);
         muteButton.setButtonText ("mute");
+        muteButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
+        muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::red);
         // Set up toggle button callback
         muteButton.onClick = [this] {
             const auto whatChanged = juce::Identifier ("Muted");
@@ -181,6 +184,7 @@ public:
         // TODO:
         // outputMsgTypeComboBox.setSelectedId (newState.getProperty ("MsgType", OSCBridgeChannel::MidiNote).getObject() + 1);
         muteButton.setToggleState (newState.getProperty ("Muted", false), juce::dontSendNotification);
+        muteButton.setClickingTogglesState (true);
     }
 
 private:

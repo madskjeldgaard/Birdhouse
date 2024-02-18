@@ -1,5 +1,3 @@
-- Make state listener work
-- Connect GUI to channels
 - Add activity indicator
 - Turn osc recv port field red if it is not a valid port number or it could not connect
 - Mute button

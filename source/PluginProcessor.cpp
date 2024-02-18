@@ -26,6 +26,13 @@ PluginProcessor::PluginProcessor()
     globalStateListener = std::make_shared<LambdaStateListener> (globalState);
 
     setStateChangeCallbacks();
+
+    // Register all channels with the OSCBridge manager
+    oscBridgeManager = std::make_shared<OSCBridgeManager>();
+    for (auto& chan : oscBridgeChannels)
+    {
+        oscBridgeManager->registerChannel (chan);
+    }
 }
 
 PluginProcessor::~PluginProcessor()
@@ -104,24 +111,15 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 
-    for (auto& chan : oscBridgeChannels)
-    {
-        // TODO
-        // chan->startListening();
-    }
+    auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
+    oscBridgeManager->startListening (port);
 }
 
 void PluginProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    //
-
-    for (auto& chan : oscBridgeChannels)
-    {
-        // TODO
-        chan->stopListening();
-    }
+    oscBridgeManager->stopListening();
 }
 
 bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -153,7 +151,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     for (auto& chan : oscBridgeChannels)
     {
-        chan->transferMessagesTo (midiMessages);
+        chan->appendMessagesTo (midiMessages);
     }
 
     buffer.clear();
@@ -295,7 +293,7 @@ void PluginProcessor::setStateChangeCallbacks()
             if (whatChanged == juce::Identifier ("OutputMidiNum"))
             {
                 auto newNum = chanState.getProperty ("OutputMidiNum");
-                oscBridgeChannels[i]->setOutputNum (newNum);
+                oscBridgeChannels[i]->setOutputMidiNum (static_cast<int>(newNum));
             }
 
             if (whatChanged == juce::Identifier ("MsgType"))

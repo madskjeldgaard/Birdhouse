@@ -2,6 +2,7 @@
 
 #include "bridge/LambdaStateListener.h"
 #include "bridge/OSCBridgeChannel.h"
+#include "bridge/OSCBridgeManager.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 static constexpr auto numBridgeChans = 8;
@@ -53,9 +54,7 @@ public:
 
 private:
     std::vector<std::shared_ptr<OSCBridgeChannel>> oscBridgeChannels;
-
-    // Socket for OSC
-    juce::StreamingSocket oscSocket;
+    std::shared_ptr<OSCBridgeManager> oscBridgeManager;
 
     std::vector<std::shared_ptr<LambdaStateListener>> chanListeners {};
     std::shared_ptr<LambdaStateListener> globalStateListener;

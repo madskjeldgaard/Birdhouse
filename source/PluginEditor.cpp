@@ -109,6 +109,19 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portLabel.setText ("Port", juce::dontSendNotification);
     addAndMakeVisible (portLabel);
 
+    // Connection status
+    connectionStatusTitleLabel.setFont (labelFont);
+    connectionStatusTitleLabel.setColour (juce::Label::textColourId, labelColour);
+    connectionStatusTitleLabel.setText ("Status:", juce::dontSendNotification);
+    addAndMakeVisible (connectionStatusTitleLabel);
+
+    connectionStatusLabel.setFont (labelFont);
+    connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
+    connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
+    connectionStatusLabel.setJustificationType (juce::Justification::left);
+
+    addAndMakeVisible (connectionStatusLabel);
+
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (1000, 500);
@@ -130,38 +143,17 @@ void PluginEditor::paint (juce::Graphics& g)
 
     if (connectionStatus)
     {
-        portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
+        // portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
+        connectionStatusLabel.setText ("Connected", juce::dontSendNotification);
+        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::green);
     }
     else
     {
-        portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
+        // portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
+
+        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
+        connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
     }
-
-    // const auto timeThresholdMS = 100;
-    // Iterate over all channels and see if it's been more than tan the timeThresholdMS since last message
-    // If it has, set the path label colour to BirdHouse::Colour::fg
-    // If it hasn't, set the path label colour to BirdHouse::Colour::magenta
-
-    // auto index = 0u;
-    // for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
-    // {
-    //     auto timeSinceLastValue = processorRef.getTimeSinceLastValueChannel (index);
-
-    //     // Paint an active color if the channel has been active recently
-    //     // if (timeSinceLastValue < timeThresholdMS)
-    //     // {
-    //     //     juce::Logger::writeToLog ("timeSinceLastMessage: " + juce::String (timeSinceLastValue));
-    //         auto amountActivity = processorRef.getNormalizedValueFromChannel (index);
-    //         oscBridgeChannelEditor->setActivityAmount (amountActivity);
-    //     // }
-    //     // else
-    //     // {
-    //     //     // Else normal color
-    //     //     oscBridgeChannelEditor->setActivityAmount (-1.f);
-    //     // }
-
-    //     index++;
-    // }
 }
 
 void PluginEditor::resized()
@@ -186,7 +178,7 @@ void PluginEditor::resized()
 
     // Split the bottom area into three parts
     auto portLabelWidth = bottomArea.getWidth() * 0.1f; // Adjust the ratio as needed
-    auto portEditorWidth = bottomArea.getWidth() * (1.0f / 7.0f); // 1/7th of the width
+    auto portEditorWidth = bottomArea.getWidth() * (1.0f / 6.0f); // 1/7th of the width
     auto hyperlinkWidth = bottomArea.getWidth() * 0.2f; // Adjust as needed
 
     // Place portLabel on the left side of the bottom area
@@ -194,6 +186,10 @@ void PluginEditor::resized()
 
     // Place portEditor next to portLabel
     portEditor.setBounds (bottomArea.removeFromLeft (portEditorWidth));
+
+    // Connection status
+    connectionStatusTitleLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));
+    connectionStatusLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth));
 
     // Place hyperlinkButton on the far right of the bottom area
     hyperlinkButton.setBounds (bottomArea.removeFromRight (hyperlinkWidth));

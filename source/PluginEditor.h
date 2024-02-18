@@ -27,7 +27,7 @@ private:
     juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
     std::unique_ptr<BirdHouse::BirdHouseLookAndFeel> lookAndFeel;
 
-    juce::Label portLabel { "Port" };
+    juce::Label portLabel { "Port" }, connectionStatusTitleLabel { "Connection Status" }, connectionStatusLabel { "Disconnected" };
     juce::TextEditor portEditor;
     std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
 

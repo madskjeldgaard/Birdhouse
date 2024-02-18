@@ -57,6 +57,7 @@ public:
 
         addAndMakeVisible (muteButton);
         muteButton.setToggleable (true);
+        muteButton.setClickingTogglesState (true);
         muteButton.setButtonText ("mute");
         muteButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
         muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::red);
@@ -81,7 +82,6 @@ public:
     void setColour (juce::Colour colour)
     {
         const auto colourID = juce::Label::textColourId;
-        pathEditor.setColour (colourID, colour);
         inputMinEditor.setColour (colourID, colour);
         inputMaxEditor.setColour (colourID, colour);
         outputMidiChannelEditor.setColour (colourID, colour);
@@ -91,6 +91,31 @@ public:
         auto comboBoxID = juce::ComboBox::textColourId;
         outputMsgTypeComboBox.setColour (comboBoxID, colour);
     }
+
+    // Amount = -1.0 to 1.0
+    // Below 0.0, it paints the path in textColourId
+    // At 0.0, it paints the path in red
+    // Above 0.0, it paints the path in green
+    // void setActivityAmount (float amount)
+    // {
+    //     // activityIndicator.setAmount (amount);
+    //     // activityIndicator.repaint();
+    //     //
+    //     if (amount < 0.0f)
+    //     {
+    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::fg);
+    //     }
+    //     else if (amount == 0.0f)
+    //     {
+    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::red);
+    //     }
+    //     else
+    //     {
+    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::green);
+    //     }
+
+    //     pathEditor.repaint();
+    // }
 
     void setFont (const juce::Font& font)
     {
@@ -142,11 +167,6 @@ public:
         outputMsgTypeComboBox.setSelectedId (type + 1);
     }
 
-    // void setActivityColor (auto newColour)
-    // {
-    //     activityIndicator.setColour (newColour);
-    // }
-
     void resized() override
     {
         const auto numElements = OSCBridgeChannelLabels::Labels::NumLabels;
@@ -184,7 +204,6 @@ public:
         // TODO:
         // outputMsgTypeComboBox.setSelectedId (newState.getProperty ("MsgType", OSCBridgeChannel::MidiNote).getObject() + 1);
         muteButton.setToggleState (newState.getProperty ("Muted", false), juce::dontSendNotification);
-        muteButton.setClickingTogglesState (true);
     }
 
 private:

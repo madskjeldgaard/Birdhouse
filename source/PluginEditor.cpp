@@ -67,6 +67,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
     portEditor.setJustification (juce::Justification::left);
     portEditor.setText (juce::String (port));
+    portEditor.setInputRestrictions (5, "1234567890");
     portEditor.onTextChange = [this] {
         auto newport = portEditor.getText().getIntValue();
         auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
@@ -97,6 +98,43 @@ void PluginEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+
+    auto connectionStatus = processorRef.oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("ConnectionStatus", false);
+
+    if (connectionStatus)
+    {
+        portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
+    }
+    else
+    {
+        portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
+    }
+
+    // const auto timeThresholdMS = 100;
+    // Iterate over all channels and see if it's been more than tan the timeThresholdMS since last message
+    // If it has, set the path label colour to BirdHouse::Colour::fg
+    // If it hasn't, set the path label colour to BirdHouse::Colour::magenta
+
+    // auto index = 0u;
+    // for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
+    // {
+    //     auto timeSinceLastValue = processorRef.getTimeSinceLastValueChannel (index);
+
+    //     // Paint an active color if the channel has been active recently
+    //     // if (timeSinceLastValue < timeThresholdMS)
+    //     // {
+    //     //     juce::Logger::writeToLog ("timeSinceLastMessage: " + juce::String (timeSinceLastValue));
+    //         auto amountActivity = processorRef.getNormalizedValueFromChannel (index);
+    //         oscBridgeChannelEditor->setActivityAmount (amountActivity);
+    //     // }
+    //     // else
+    //     // {
+    //     //     // Else normal color
+    //     //     oscBridgeChannelEditor->setActivityAmount (-1.f);
+    //     // }
+
+    //     index++;
+    // }
 }
 
 void PluginEditor::resized()

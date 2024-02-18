@@ -16,6 +16,7 @@ public:
     OSCBridgeChannel (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
         : path (path), inputMin (fromMin), inputMax (fromMax), outputMidiChan (outputMidiChannel), outMidiNum (outputNum), msgType (outputType)
     {
+        lastValueTime = juce::Time::currentTimeMillis();
     }
 
     // An alternative constructor that takes a ValueTree
@@ -28,6 +29,7 @@ public:
           msgType (static_cast<MsgType> (static_cast<int> (channelState.getProperty ("MsgType")))),
           muted (channelState.getProperty ("Muted", false))
     {
+        lastValueTime = juce::Time::currentTimeMillis();
     }
 
     void setMuted (bool shouldBeMuted)
@@ -67,6 +69,35 @@ public:
         msgType = newOutputType;
     }
 
+    auto getRawValue() const
+    {
+        return rawValue;
+    }
+
+    /**
+     * @brief Get the normalized value (0-1 range)
+     *
+     * @return auto
+     */
+    auto getNormalizedValue() const
+    {
+        return juce::jmap (rawValue, inputMin, inputMax, 0.0f, 1.0f);
+    }
+
+    /**
+     * @brief Get the time since the last value was received in milliseconds
+     *
+     * @return auto
+     */
+    auto timeSinceLastValue() const
+    {
+        auto currentTime = juce::Time::currentTimeMillis();
+
+        auto timeSinceLastValue = currentTime - lastValueTime;
+
+        return timeSinceLastValue;
+    }
+
     // Add MIDI message to the channel's list of buffers
     void addMidiMessageToBuffer (const juce::MidiMessage& message, int timeStamp = 0)
     {
@@ -98,12 +129,13 @@ public:
         if (!muted)
         {
             juce::Logger::writeToLog ("received message");
+            lastValueTime = juce::Time::currentTimeMillis();
 
             if (message.size() == 1 && message[0].isFloat32())
             {
                 juce::Logger::writeToLog ("received float");
 
-                const auto rawValue = message[0].getFloat32();
+                rawValue = message[0].getFloat32();
                 auto midiMessage = convertToMidiMessage (rawValue);
                 juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
                 addMidiMessageToBuffer (midiMessage);
@@ -112,8 +144,10 @@ public:
     }
 
 private:
+    juce::int64 lastValueTime{0}; // Tracks the last time a value > 0.0 was received
+
     juce::String path;
-    float inputMin, inputMax;
+    float inputMin { 0.f }, inputMax { 1.0f }, rawValue { 0.f };
     int outputMidiChan, outMidiNum;
     MsgType msgType;
     juce::MidiBuffer mInternalBuffer;

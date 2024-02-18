@@ -112,7 +112,8 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 
     auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
-    oscBridgeManager->startListening (port);
+    auto connectionResult = oscBridgeManager->startListening (port);
+    oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
 void PluginProcessor::releaseResources()
@@ -210,7 +211,9 @@ juce::ValueTree PluginProcessor::createEmptyOSCState()
     // In the global settings, we can add the following:
     // - Port
     // - Version
+    //  - ConnectionStatus
     globalSettings.setProperty ("Port", 6666, nullptr);
+    globalSettings.setProperty ("ConnectionStatus", false, nullptr);
     globalSettings.setProperty ("Version", VERSION, nullptr);
 
     constexpr auto numChannels = 8;
@@ -293,7 +296,7 @@ void PluginProcessor::setStateChangeCallbacks()
             if (whatChanged == juce::Identifier ("OutputMidiNum"))
             {
                 auto newNum = chanState.getProperty ("OutputMidiNum");
-                oscBridgeChannels[i]->setOutputMidiNum (static_cast<int>(newNum));
+                oscBridgeChannels[i]->setOutputMidiNum (static_cast<int> (newNum));
             }
 
             if (whatChanged == juce::Identifier ("MsgType"))
@@ -321,6 +324,17 @@ void PluginProcessor::setStateChangeCallbacks()
         {
             auto newPort = globalSettings.getProperty ("Port");
             juce::Logger::writeToLog ("Port changed to " + juce::String (newPort));
+
+            oscBridgeManager->stopListening();
+            auto connectionResult = oscBridgeManager->startListening (newPort);
+
+            globalSettings.setProperty ("ConnectionStatus", connectionResult, nullptr);
+        }
+
+        if (whatChanged == juce::Identifier ("ConnectionStatus"))
+        {
+            auto newStatus = globalSettings.getProperty ("ConnectionStatus");
+            juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
         }
     });
 }

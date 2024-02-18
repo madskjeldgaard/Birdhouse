@@ -52,6 +52,42 @@ public:
     void updateListenerStates();
     void setStateChangeCallbacks();
 
+    auto getRawValueFromChannel (int channel) -> float
+    {
+        if (channel < 0 || channel >= numBridgeChans)
+        {
+            return 0.0f;
+        }
+        else
+        {
+            return oscBridgeChannels[channel]->getRawValue();
+        }
+    }
+
+    auto getNormalizedValueFromChannel (int channel) -> float
+    {
+        if (channel < 0 || channel >= numBridgeChans)
+        {
+            return 0.0f;
+        }
+        else
+        {
+            return oscBridgeChannels[channel]->getNormalizedValue();
+        }
+    }
+
+    auto getTimeSinceLastValueChannel (int channel) -> int
+    {
+        if (channel < 0 || channel >= numBridgeChans)
+        {
+            return 0;
+        }
+        else
+        {
+            return oscBridgeChannels[channel]->timeSinceLastValue();
+        }
+    }
+
 private:
     std::vector<std::shared_ptr<OSCBridgeChannel>> oscBridgeChannels;
     std::shared_ptr<OSCBridgeManager> oscBridgeManager;

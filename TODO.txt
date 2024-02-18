@@ -3,3 +3,4 @@
 - Turn osc recv port field red if it is not a valid port number or it could not connect
 - Presets
 - Info about sender?
+- Add OSC Monitor

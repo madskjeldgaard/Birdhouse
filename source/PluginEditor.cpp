@@ -19,15 +19,17 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     addAndMakeVisible (hyperlinkButton);
 
     // Labels
+    auto labelFont = juce::Font (defaultFontSize, juce::Font::bold);
+    auto labelColour = BirdHouse::Colours::blue;
     oscBridgeChannelLabels = std::make_unique<OSCBridgeChannelLabels>();
-    oscBridgeChannelLabels->setFont (juce::Font (defaultFontSize, juce::Font::bold));
-    oscBridgeChannelLabels->setColour (BirdHouse::Colours::blue);
+    oscBridgeChannelLabels->setFont (labelFont);
+    oscBridgeChannelLabels->setColour (labelColour);
     addAndMakeVisible (*oscBridgeChannelLabels);
 
     // Set font for title
-    auto font = juce::Font (defaultFontSize * 1.33f, juce::Font::bold);
-    titleLabel.setFont (font);
-    titleLabel.setText ("BirdHouse. OSC to MIDI. v" VERSION ".", juce::dontSendNotification);
+    auto titleFont = juce::Font (defaultFontSize * 1.33f, juce::Font::bold);
+    titleLabel.setFont (titleFont);
+    titleLabel.setText ("BirdHouse. An OSC to MIDI bridge. v" VERSION ".", juce::dontSendNotification);
     titleLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
     titleLabel.setVisible (true);
     addAndMakeVisible (titleLabel);
@@ -39,7 +41,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
         // Set default values for the editors
         oscBridgeChannelEditors.back()->setFont (juce::Font (defaultFontSize, juce::Font::plain));
-        oscBridgeChannelEditors.back()->setRecvPort (8000);
         oscBridgeChannelEditors.back()->setPath ("/" + juce::String (i + 1) + "/value");
         oscBridgeChannelEditors.back()->setInputMin (0.f);
         oscBridgeChannelEditors.back()->setInputMax (1.f);
@@ -49,6 +50,18 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
         addAndMakeVisible (*oscBridgeChannelEditors.back());
     }
+
+    // Port
+    portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
+    portEditor.setJustification (juce::Justification::left);
+    portEditor.setText (juce::String (8000));
+    addAndMakeVisible (portEditor);
+
+    // Port label
+    portLabel.setFont (labelFont);
+    portLabel.setColour (juce::Label::textColourId, labelColour);
+    portLabel.setText ("Port", juce::dontSendNotification);
+    addAndMakeVisible (portLabel);
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -70,24 +83,36 @@ void PluginEditor::paint (juce::Graphics& g)
 
 void PluginEditor::resized()
 {
-    // layout the positions of your child components here
     auto area = getLocalBounds();
-    auto oscChannelHeight = area.getHeight() / (oscBridgeChannelEditors.size() + 3);
+    auto totalChannels = oscBridgeChannelEditors.size() + 5; // Including title, port, and hyperlink in count
+    auto itemHeight = area.getHeight() / totalChannels;
 
-    // Add title
-    auto titleSize = oscChannelHeight;
-    titleLabel.setBounds (area.removeFromTop (titleSize));
+    // Title area at the top
+    titleLabel.setBounds (area.removeFromTop (itemHeight));
 
-    // Labels
-    oscBridgeChannelLabels->setBounds (area.removeFromTop (oscChannelHeight));
+    // Adjusting for the channels' labels and editors
+    oscBridgeChannelLabels->setBounds (area.removeFromTop (itemHeight));
 
     for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
     {
-        oscBridgeChannelEditor->setBounds (area.removeFromTop (oscChannelHeight));
+        oscBridgeChannelEditor->setBounds (area.removeFromTop (itemHeight));
     }
 
-    // Add link, place at top right
-    // auto hyperLinkBounds = juce::Rectangle<int> (area.getRight() - hyperlinkWidth, 0, hyperlinkWidth, titleSize);
-    auto hyperLinkBounds = area.removeFromTop (titleSize);
-    hyperlinkButton.setBounds (hyperLinkBounds);
+    // Layout for portLabel, portEditor, and hyperlinkButton at the bottom
+    // auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
+    auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
+
+    // Split the bottom area into three parts
+    auto portLabelWidth = bottomArea.getWidth() * 0.1f; // Adjust the ratio as needed
+    auto portEditorWidth = bottomArea.getWidth() * (1.0f / 7.0f); // 1/7th of the width
+    auto hyperlinkWidth = bottomArea.getWidth() * 0.2f; // Adjust as needed
+
+    // Place portLabel on the left side of the bottom area
+    portLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));
+
+    // Place portEditor next to portLabel
+    portEditor.setBounds (bottomArea.removeFromLeft (portEditorWidth));
+
+    // Place hyperlinkButton on the far right of the bottom area
+    hyperlinkButton.setBounds (bottomArea.removeFromRight (hyperlinkWidth));
 }

@@ -5,7 +5,6 @@ class OSCBridgeChannelLabels : public juce::Component
 {
 public:
     enum Labels {
-        RecvPort,
         Path,
         InputMin,
         InputMax,
@@ -28,9 +27,6 @@ public:
         {
             addAndMakeVisible (label.get());
         }
-
-        // RecvPort
-        labels[RecvPort]->setText ("Port", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);
@@ -71,7 +67,7 @@ public:
     {
         // Lay out with equal width from left to right
         auto area = getLocalBounds();
-        auto width = area.getWidth() / 7;
+        auto width = area.getWidth() / NumLabels;
 
         for (auto& label : labels)
         {

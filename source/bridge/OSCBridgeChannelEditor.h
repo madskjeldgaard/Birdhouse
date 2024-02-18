@@ -9,9 +9,6 @@ public:
     OSCBridgeChannelEditor()
     {
         // Setup components
-        addAndMakeVisible (recvPortEditor);
-        recvPortEditor.onTextChange = [this] { updateChannelSettings(); };
-
         addAndMakeVisible (pathEditor);
         pathEditor.onTextChange = [this] { updateChannelSettings(); };
 
@@ -50,7 +47,6 @@ public:
     void setColour (juce::Colour colour)
     {
         const auto colourID = juce::Label::textColourId;
-        recvPortEditor.setColour (colourID, colour);
         pathEditor.setColour (colourID, colour);
         inputMinEditor.setColour (colourID, colour);
         inputMaxEditor.setColour (colourID, colour);
@@ -63,7 +59,6 @@ public:
 
     void setFont (const juce::Font& font)
     {
-        recvPortEditor.setFont (font);
         pathEditor.setFont (font);
         inputMinEditor.setFont (font);
         inputMaxEditor.setFont (font);
@@ -73,7 +68,6 @@ public:
 
     void setJustification (juce::Justification justification)
     {
-        recvPortEditor.setJustification (justification);
         pathEditor.setJustification (justification);
         inputMinEditor.setJustification (justification);
         inputMaxEditor.setJustification (justification);
@@ -82,10 +76,6 @@ public:
         // outputMsgTypeComboBox.setTextJustification (justification);
     }
 
-    void setRecvPort (int port)
-    {
-        recvPortEditor.setText (juce::String (port));
-    }
 
     void setPath (const juce::String& path)
     {
@@ -122,9 +112,8 @@ public:
     {
         // Lay out with equal width from left to right
         auto area = getLocalBounds();
-        auto width = area.getWidth() / 7;
+        auto width = area.getWidth() / 6;
 
-        recvPortEditor.setBounds (area.removeFromLeft (width));
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
         inputMaxEditor.setBounds (area.removeFromLeft (width));
@@ -135,7 +124,6 @@ public:
 
 private:
     // GUI Components
-    juce::TextEditor recvPortEditor;
     juce::TextEditor pathEditor;
     juce::TextEditor inputMinEditor;
     juce::TextEditor inputMaxEditor;

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "OSCBridgeChannel.h" // Include your OSCBridgeChannel header here
+#include "../bridge/OSCBridgeChannel.h" // Include your OSCBridgeChannel header here
+#include "ActivityIndicator.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 class OSCBridgeChannelEditor : public juce::Component
@@ -9,6 +10,8 @@ public:
     OSCBridgeChannelEditor()
     {
         // Setup components
+        addAndMakeVisible (activityIndicator);
+
         addAndMakeVisible (pathEditor);
         pathEditor.onTextChange = [this] { updateChannelSettings(); };
 
@@ -76,7 +79,6 @@ public:
         // outputMsgTypeComboBox.setTextJustification (justification);
     }
 
-
     void setPath (const juce::String& path)
     {
         pathEditor.setText (path);
@@ -107,12 +109,18 @@ public:
         outputMsgTypeComboBox.setSelectedId (type + 1);
     }
 
-    void resized() override
-
+    void setActivityColor (auto newColour)
     {
+        activityIndicator.setColour (newColour);
+    }
+
+    void resized() override
+    {
+        const auto numElements = 7;
+
         // Lay out with equal width from left to right
         auto area = getLocalBounds();
-        auto width = area.getWidth() / 6;
+        auto width = area.getWidth() / numElements;
 
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
@@ -120,10 +128,12 @@ public:
         outputMidiChannelEditor.setBounds (area.removeFromLeft (width));
         outputNumEditor.setBounds (area.removeFromLeft (width));
         outputMsgTypeComboBox.setBounds (area.removeFromLeft (width));
+        activityIndicator.setBounds (area.removeFromLeft (width));
     }
 
 private:
     // GUI Components
+    ActivityIndicator activityIndicator;
     juce::TextEditor pathEditor;
     juce::TextEditor inputMinEditor;
     juce::TextEditor inputMaxEditor;

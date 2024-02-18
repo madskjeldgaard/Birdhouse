@@ -1,10 +1,10 @@
 #pragma once
 
 #include "BinaryData.h"
-#include "BirdHouseLookAndFeel.h"
 #include "PluginProcessor.h"
-#include "bridge/OSCBridgeChannelEditor.h"
-#include "bridge/OSCBridgeChannelLabels.h"
+#include "gui/BirdHouseLookAndFeel.h"
+#include "gui/OSCBridgeChannelEditor.h"
+#include "gui/OSCBridgeChannelLabels.h"
 
 //==============================================================================
 class PluginEditor : public juce::AudioProcessorEditor
@@ -27,8 +27,7 @@ private:
     juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
     std::unique_ptr<BirdHouse::BirdHouseLookAndFeel> lookAndFeel;
 
-
-  juce::Label portLabel { "Port" };
+    juce::Label portLabel { "Port" };
     juce::TextEditor portEditor;
     std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
 

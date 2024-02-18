@@ -44,7 +44,7 @@ namespace BirdHouse
             setColour (juce::TextEditor::highlightColourId, Colours::blue.withAlpha (0.5f));
             setColour (juce::TextEditor::highlightedTextColourId, Colours::magenta);
             setColour (juce::TextEditor::outlineColourId, Colours::fg.withAlpha (0.5f));
-            setColour (juce::TextEditor::focusedOutlineColourId, Colours::blue);
+            setColour (juce::TextEditor::focusedOutlineColourId, Colours::magenta);
 
             // Additional component colours can be set here following the same pattern
         }

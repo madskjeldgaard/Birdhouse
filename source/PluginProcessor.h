@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SimpleNoiseGenerator.h"
 #include "bridge/OSCBridgeChannel.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -44,7 +43,6 @@ public:
 private:
     // std::unique_ptr<std::vector<OSCBridgeChannel>> oscBridgeChannels;
     OSCBridgeChannel oscBridgeChannel1 { 6666, "/note1", 0.0f, 1.0f, 1, 48, OSCBridgeChannel::MidiNote };
-    SimpleNoiseGenerator noiseGen;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

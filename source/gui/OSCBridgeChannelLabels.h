@@ -11,6 +11,7 @@ public:
         MidiChannel,
         MidiNum,
         OutputMsgType,
+        Activity,
         NumLabels
     };
 
@@ -27,6 +28,9 @@ public:
         {
             addAndMakeVisible (label.get());
         }
+
+        // Activity
+        labels[Activity]->setText ("", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);

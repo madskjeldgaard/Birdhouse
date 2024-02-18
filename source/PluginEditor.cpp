@@ -68,6 +68,8 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portEditor.setJustification (juce::Justification::left);
     portEditor.setText (juce::String (port));
     portEditor.setInputRestrictions (5, "1234567890");
+
+    // Filter text
     portEditor.onTextChange = [this] {
         auto newport = portEditor.getText().getIntValue();
         auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
@@ -79,18 +81,24 @@ PluginEditor::PluginEditor (PluginProcessor& p)
         // Otherwise, set it to the new value
         if (newport < 0)
         {
-            globalSettings.setProperty ("Port", 0, nullptr);
             portEditor.setText ("0", false);
         }
         else if (newport > 65535)
         {
-            globalSettings.setProperty ("Port", 65535, nullptr);
             portEditor.setText ("65535", false);
         }
-        else
-        {
-            globalSettings.setProperty ("Port", newport, nullptr);
-        }
+    };
+
+    // On return -> lose focus
+    portEditor.onReturnKey = [this] {
+        portEditor.focusLost (FocusChangeType::focusChangedDirectly);
+    };
+
+    // Focus lost -> update state
+    portEditor.onFocusLost = [this] {
+        auto newport = portEditor.getText().getIntValue();
+        auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
+        globalSettings.setProperty ("Port", newport, nullptr);
     };
 
     addAndMakeVisible (portEditor);

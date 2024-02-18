@@ -46,7 +46,7 @@ public:
 
         outputMsgTypeComboBox.addItem ("Note", OSCBridgeChannel::MidiNote + 1);
         outputMsgTypeComboBox.addItem ("CC", OSCBridgeChannel::MidiCC + 1);
-        outputMsgTypeComboBox.addItem ("Bend", OSCBridgeChannel::MidiBend + 1);
+        // outputMsgTypeComboBox.addItem ("Bend", OSCBridgeChannel::MidiBend + 1);
         addAndMakeVisible (outputMsgTypeComboBox);
         outputMsgTypeComboBox.onChange = [this] {
             const auto whatChanged = juce::Identifier ("MsgType");

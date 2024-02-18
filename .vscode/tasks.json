@@ -31,8 +31,8 @@
     {
       "label": "Build and run BirdHouse VST3 in Reaper",
       "type": "shell",
-      "command": "killall REAPER; open -a REAPER.app/Contents/MacOS/REAPER examples/reaper/BirdHouse.RPP",
+      "command": "killall REAPER;  /Applications/REAPER.app/Contents/MacOS/REAPER examples/reaper/BirdHouse.RPP",
       "dependsOn": "Build BirdHouse",
     },
-  ]
+      ]
 }

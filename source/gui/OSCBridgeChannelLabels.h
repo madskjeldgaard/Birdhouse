@@ -11,7 +11,8 @@ public:
         MidiChannel,
         MidiNum,
         OutputMsgType,
-        Activity,
+        Muted,
+        // Activity,
         NumLabels
     };
 
@@ -30,7 +31,7 @@ public:
         }
 
         // Activity
-        labels[Activity]->setText ("", juce::dontSendNotification);
+        // labels[Activity]->setText ("Activity", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);
@@ -49,6 +50,9 @@ public:
 
         // OutputMsgType
         labels[OutputMsgType]->setText ("MsgType", juce::dontSendNotification);
+
+        // muted
+        labels[Muted]->setText ("Muted", juce::dontSendNotification);
     }
 
     void setFont (const juce::Font& font)

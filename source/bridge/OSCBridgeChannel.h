@@ -1,20 +1,33 @@
 #pragma once
 
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_data_structures/juce_data_structures.h>
 #include <juce_osc/juce_osc.h>
 
 class OSCBridgeChannel : private juce::OSCReceiver,
                          private juce::OSCReceiver::ListenerWithOSCAddress<juce::OSCReceiver::RealtimeCallback>
 {
 public:
-    enum OutputType {
+    enum MsgType {
         MidiNote,
         MidiCC,
         MidiBend
     };
 
-    OSCBridgeChannel (int recvPort, const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, OutputType outputType)
-        : recvPort (recvPort), path (path), fromMin (fromMin), fromMax (fromMax), outputMidiChannel (outputMidiChannel), outputNum (outputNum), outputType (outputType)
+    OSCBridgeChannel (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
+        : path (path), fromMin (fromMin), fromMax (fromMax), outputMidiChannel (outputMidiChannel), outputNum (outputNum), outputType (outputType)
+    {
+    }
+
+    // An alternative constructor that takes a ValueTree
+    OSCBridgeChannel (juce::ValueTree channelState)
+        : path (channelState.getProperty ("Path").toString()),
+          fromMin (channelState.getProperty ("InputMin")),
+          fromMax (channelState.getProperty ("InputMax")),
+          outputMidiChannel (channelState.getProperty ("OutputMidiChannel")),
+          outputNum (channelState.getProperty ("OutputMidiNum")),
+          outputType (static_cast<MsgType> (static_cast<int> (channelState.getProperty ("MsgType")))),
+          muted (channelState.getProperty ("Muted", false))
     {
     }
 
@@ -24,21 +37,52 @@ public:
         stopListening();
     }
 
-    void setPort (int port)
+    void setMuted (bool shouldBeMuted)
     {
-        recvPort = port;
+        muted = shouldBeMuted;
     }
 
-    auto startListening()
+    // Setters
+    void setPath (const juce::String& newPath)
     {
-        if (!connect (recvPort))
+        path = newPath;
+    }
+
+    void setInputMin (auto newFromMin)
+    {
+        fromMin = newFromMin;
+    }
+
+    void setInputMax (auto newFromMax)
+    {
+        fromMax = newFromMax;
+    }
+
+    void setOutputMidiChannel (auto newOutputMidiChannel)
+    {
+        outputMidiChannel = newOutputMidiChannel;
+    }
+
+    void setOutputNum (auto newOutputNum)
+    {
+        outputNum = newOutputNum;
+    }
+
+    void setOutputType (auto newOutputType)
+    {
+        outputType = newOutputType;
+    }
+
+    auto startListening (auto socket)
+    {
+        if (!connectToSocket (socket))
         {
-            juce::Logger::writeToLog ("Could not connect to port " + juce::String (recvPort));
+            juce::Logger::writeToLog ("Could not connect to socket ");
             return false;
         }
         else
         {
-            juce::Logger::writeToLog ("Connected to port " + juce::String (recvPort));
+            juce::Logger::writeToLog ("Connected to socket ");
             addListener (this, path);
             return true;
         }
@@ -74,26 +118,30 @@ public:
 protected:
     void oscMessageReceived (const juce::OSCMessage& message) override
     {
-        juce::Logger::writeToLog ("received message");
-
-        if (message.size() == 1 && message[0].isFloat32())
+        if (!muted)
         {
-            juce::Logger::writeToLog ("received float");
+            juce::Logger::writeToLog ("received message");
 
-            const auto rawValue = message[0].getFloat32();
-            auto midiMessage = convertToMidiMessage (rawValue);
-            juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
-            addMidiMessageToBuffer (midiMessage);
+            if (message.size() == 1 && message[0].isFloat32())
+            {
+                juce::Logger::writeToLog ("received float");
+
+                const auto rawValue = message[0].getFloat32();
+                auto midiMessage = convertToMidiMessage (rawValue);
+                juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
+                addMidiMessageToBuffer (midiMessage);
+            }
         }
     }
 
 private:
-    int recvPort;
     juce::String path;
     float fromMin, fromMax;
     int outputMidiChannel, outputNum;
-    OutputType outputType;
+    MsgType outputType;
     juce::MidiBuffer mInternalBuffer;
+
+    bool muted;
 
     // Converts the raw value to a MIDI message
     juce::MidiMessage convertToMidiMessage (auto rawValue)

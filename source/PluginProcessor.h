@@ -1,7 +1,10 @@
 #pragma once
 
+#include "bridge/LambdaStateListener.h"
 #include "bridge/OSCBridgeChannel.h"
 #include <juce_audio_processors/juce_audio_processors.h>
+
+static constexpr auto numBridgeChans = 8;
 
 #if (MSVC)
     #include "ipps.h"
@@ -40,9 +43,22 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // Create state
+    juce::ValueTree createEmptyOSCState();
+
+    juce::ValueTree oscBridgeState { createEmptyOSCState() };
+
+    void updateListenerStates();
+    void setStateChangeCallbacks();
+
 private:
-    // std::unique_ptr<std::vector<OSCBridgeChannel>> oscBridgeChannels;
-    OSCBridgeChannel oscBridgeChannel1 { 6666, "/note1", 0.0f, 1.0f, 1, 48, OSCBridgeChannel::MidiNote };
+    std::vector<std::shared_ptr<OSCBridgeChannel>> oscBridgeChannels;
+
+    // Socket for OSC
+    juce::StreamingSocket oscSocket;
+
+    std::vector<std::shared_ptr<LambdaStateListener>> chanListeners {};
+    std::shared_ptr<LambdaStateListener> globalStateListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

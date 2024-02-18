@@ -62,8 +62,14 @@ namespace BirdHouse
             return getCustomFont();
         }
 
+        juce::Font getTextButtonFont (juce::TextButton&, int buttonHeight) override
+        {
+            return getCustomFont().withHeight (buttonHeight / 2);
+        }
+
     private:
-        juce::Font getCustomFont()
+        juce::Font
+            getCustomFont()
         {
             static auto typeface = juce::Typeface::createSystemTypefaceFor (BinaryData::JetBrainsMonoRegular_ttf, BinaryData::JetBrainsMonoRegular_ttfSize);
             return juce::Font (typeface);

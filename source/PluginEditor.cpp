@@ -34,27 +34,45 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     titleLabel.setVisible (true);
     addAndMakeVisible (titleLabel);
 
+    // Get state
+    auto state = processorRef.oscBridgeState;
+
+    // Set up each channel
     auto numChannels = 8;
     for (auto i = 0; i < numChannels; ++i)
     {
+        auto channelID = juce::Identifier (juce::String (i));
+        auto channelState = state.getChildWithName ("ChannelSettings").getChild (i);
+
         oscBridgeChannelEditors.push_back (std::make_unique<OSCBridgeChannelEditor>());
 
         // Set default values for the editors
         oscBridgeChannelEditors.back()->setFont (juce::Font (defaultFontSize, juce::Font::plain));
-        oscBridgeChannelEditors.back()->setPath ("/" + juce::String (i + 1) + "/value");
-        oscBridgeChannelEditors.back()->setInputMin (0.f);
-        oscBridgeChannelEditors.back()->setInputMax (1.f);
-        oscBridgeChannelEditors.back()->setOutputMidiChannel (1);
-        oscBridgeChannelEditors.back()->setOutputNum (i + 1);
-        oscBridgeChannelEditors.back()->setOutputMsgType (0);
+        if (channelState.isValid())
+        {
+            oscBridgeChannelEditors.back()->setState (channelState);
+        }
+        else
+        {
+            juce::Logger::writeToLog ("Channel state is invalid");
+        }
 
         addAndMakeVisible (*oscBridgeChannelEditors.back());
     }
 
+    auto globalState = state.getChildWithName ("GlobalSettings");
+
     // Port
+    auto port = globalState.getProperty ("Port", 8000);
     portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
     portEditor.setJustification (juce::Justification::left);
-    portEditor.setText (juce::String (8000));
+    portEditor.setText (juce::String (port));
+    portEditor.onTextChange = [this] {
+        auto newport = portEditor.getText().getIntValue();
+        auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
+        juce::Logger::writeToLog ("gUI: New port: " + juce::String (newport));
+        globalSettings.setProperty ("Port", newport, nullptr);
+    };
     addAndMakeVisible (portEditor);
 
     // Port label
@@ -65,7 +83,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (1000, 600);
+    setSize (1000, 500);
 
     // Allow resizing
     setResizable (true, false);
@@ -84,7 +102,7 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto area = getLocalBounds();
-    auto totalChannels = oscBridgeChannelEditors.size() + 5; // Including title, port, and hyperlink in count
+    auto totalChannels = oscBridgeChannelEditors.size() + 4; // Including title, port, and hyperlink in count
     auto itemHeight = area.getHeight() / totalChannels;
 
     // Title area at the top
@@ -99,7 +117,6 @@ void PluginEditor::resized()
     }
 
     // Layout for portLabel, portEditor, and hyperlinkButton at the bottom
-    // auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
     auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
 
     // Split the bottom area into three parts

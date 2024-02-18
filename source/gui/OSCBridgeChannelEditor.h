@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../bridge/OSCBridgeChannel.h" // Include your OSCBridgeChannel header here
+#include "../bridge/OSCBridgeChannel.h"
 #include "ActivityIndicator.h"
-#include "OSCBridgeChannelLabels.h" // Include your OSCBridgeChannel header here
+#include "OSCBridgeChannelLabels.h"
 #include <juce_gui_basics/juce_gui_basics.h>
+
 // #include "ToggleTextButton.h"
 
 class OSCBridgeChannelEditor : public juce::Component
@@ -15,10 +16,8 @@ public:
         // addAndMakeVisible (activityIndicator);
 
         addAndMakeVisible (pathEditor);
+        // onTextChange->Filter text
         pathEditor.onTextChange = [this] {
-            const auto whatChanged = juce::Identifier ("Path");
-            updateChannelSettings (whatChanged);
-
             // Filter the characters
             // Must start with the "/" character
             // Must not contain any spaces
@@ -42,26 +41,58 @@ public:
             }
         };
 
+        // Return -> focus lost
+        pathEditor.onReturnKey = [this] {
+            pathEditor.focusLost (FocusChangeType::focusChangedDirectly);
+        };
+
+        // Focus lost -> update state
+        pathEditor.onFocusLost = [this] {
+            const auto whatChanged = juce::Identifier ("Path");
+            updateChannelSettings (whatChanged);
+        };
+
         addAndMakeVisible (inputMinEditor);
         inputMinEditor.setInputRestrictions (5, "0123456789.-");
+
+        // text change-> filter text
         inputMinEditor.onTextChange = [this] {
+        };
+
+        // Return -> focus lost
+        inputMinEditor.onReturnKey = [this] {
+            inputMinEditor.focusLost (FocusChangeType::focusChangedDirectly);
+        };
+
+        // Focus lost -> update state
+        inputMinEditor.onFocusLost = [this] {
             const auto whatChanged = juce::Identifier ("InputMin");
             updateChannelSettings (whatChanged);
         };
 
         addAndMakeVisible (inputMaxEditor);
         inputMaxEditor.setInputRestrictions (5, "0123456789.-");
+        // Filter text
         inputMaxEditor.onTextChange = [this] {
+
+        };
+
+        // Return -> focus lost
+        inputMaxEditor.onReturnKey = [this] {
+            inputMaxEditor.focusLost (FocusChangeType::focusChangedDirectly);
+        };
+
+        // Focus lost -> update state
+        inputMaxEditor.onFocusLost = [this] {
             const auto whatChanged = juce::Identifier ("InputMax");
             updateChannelSettings (whatChanged);
         };
 
         addAndMakeVisible (outputMidiChannelEditor);
         outputMidiChannelEditor.setInputRestrictions (2, "0123456789");
-        outputMidiChannelEditor.onTextChange = [this] {
-            const auto whatChanged = juce::Identifier ("OutputMidiChannel");
-            updateChannelSettings (whatChanged);
 
+        // Filter text
+        outputMidiChannelEditor.onTextChange = [this] {
             // Clip to midi range 1-16 for channels
             auto value = outputMidiChannelEditor.getText().getIntValue();
 
@@ -77,12 +108,22 @@ public:
             outputMidiChannelEditor.setText (juce::String (value), false);
         };
 
+        // Return -> focus lost
+        outputMidiChannelEditor.onReturnKey = [this] {
+            outputMidiChannelEditor.focusLost (FocusChangeType::focusChangedDirectly);
+        };
+
+        // Focus lost -> update state
+        outputMidiChannelEditor.onFocusLost = [this] {
+            const auto whatChanged = juce::Identifier ("OutputMidiChannel");
+            updateChannelSettings (whatChanged);
+        };
+
         addAndMakeVisible (outputNumEditor);
         outputNumEditor.setInputRestrictions (3, "0123456789");
-        outputNumEditor.onTextChange = [this] {
-            const auto whatChanged = juce::Identifier ("OutputMidiNum");
-            updateChannelSettings (whatChanged);
 
+        // Filter text
+        outputNumEditor.onTextChange = [this] {
             // Clip to midi range
             auto value = outputNumEditor.getText().getIntValue();
 
@@ -97,6 +138,17 @@ public:
             }
 
             outputNumEditor.setText (juce::String (value), false);
+        };
+
+        // Return -> focus lost
+        outputNumEditor.onReturnKey = [this] {
+            outputNumEditor.focusLost (FocusChangeType::focusChangedDirectly);
+        };
+
+        // Focus lost -> update state
+        outputNumEditor.onFocusLost = [this] {
+            const auto whatChanged = juce::Identifier ("OutputMidiNum");
+            updateChannelSettings (whatChanged);
         };
 
         outputMsgTypeComboBox.addItem ("Note", OSCBridgeChannel::MidiNote + 1);

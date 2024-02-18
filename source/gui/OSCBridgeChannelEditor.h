@@ -125,13 +125,6 @@ public:
         // Set text justification
         auto justification = juce::Justification::left;
         setJustification (justification);
-
-        // outputMsgTypeComboBox.setTextJustification (justification);
-
-        // Initialize your OSCBridgeChannel instance here if needed
-
-        // TODO:
-        // Add callbacks
     }
 
     void setColour (juce::Colour colour)
@@ -146,31 +139,6 @@ public:
         auto comboBoxID = juce::ComboBox::textColourId;
         outputMsgTypeComboBox.setColour (comboBoxID, colour);
     }
-
-    // Amount = -1.0 to 1.0
-    // Below 0.0, it paints the path in textColourId
-    // At 0.0, it paints the path in red
-    // Above 0.0, it paints the path in green
-    // void setActivityAmount (float amount)
-    // {
-    //     // activityIndicator.setAmount (amount);
-    //     // activityIndicator.repaint();
-    //     //
-    //     if (amount < 0.0f)
-    //     {
-    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::fg);
-    //     }
-    //     else if (amount == 0.0f)
-    //     {
-    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::red);
-    //     }
-    //     else
-    //     {
-    //         pathEditor.setColour (juce::TextEditor::textColourId, BirdHouse::Colours::green);
-    //     }
-
-    //     pathEditor.repaint();
-    // }
 
     void setFont (const juce::Font& font)
     {
@@ -237,7 +205,6 @@ public:
         outputNumEditor.setBounds (area.removeFromLeft (width));
         outputMsgTypeComboBox.setBounds (area.removeFromLeft (width));
         muteButton.setBounds (area.removeFromLeft (width));
-        // activityIndicator.setBounds (area.removeFromLeft (width));
     }
 
     void setState (juce::ValueTree newState)
@@ -263,7 +230,6 @@ public:
 
 private:
     // GUI Components
-    // ActivityIndicator activityIndicator;
     juce::TextEditor pathEditor;
     juce::TextEditor inputMinEditor;
     juce::TextEditor inputMaxEditor;

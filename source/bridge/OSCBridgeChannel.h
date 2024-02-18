@@ -131,11 +131,19 @@ public:
             juce::Logger::writeToLog ("received message");
             lastValueTime = juce::Time::currentTimeMillis();
 
-            if (message.size() == 1 && message[0].isFloat32())
+            if (message.size() == 1 && (message[0].isFloat32() || message[0].isInt32()))
             {
-                juce::Logger::writeToLog ("received float");
+                rawValue = 0.f;
 
-                rawValue = message[0].getFloat32();
+                if (message[0].isFloat32())
+                {
+                    rawValue = message[0].getFloat32();
+                }
+                else if (message[0].isInt32())
+                {
+                    rawValue = static_cast<float> (message[0].getInt32());
+                }
+
                 auto midiMessage = convertToMidiMessage (rawValue);
                 juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
                 addMidiMessageToBuffer (midiMessage);
@@ -144,7 +152,7 @@ public:
     }
 
 private:
-    juce::int64 lastValueTime{0}; // Tracks the last time a value > 0.0 was received
+    juce::int64 lastValueTime { 0 }; // Tracks the last time a value > 0.0 was received
 
     juce::String path;
     float inputMin { 0.f }, inputMax { 1.0f }, rawValue { 0.f };

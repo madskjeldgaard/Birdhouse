@@ -223,8 +223,9 @@ public:
         inputMaxEditor.setText (juce::String (newState.getProperty ("InputMax", 1.0f)));
         outputMidiChannelEditor.setText (juce::String (newState.getProperty ("OutputMidiChannel", 1)));
         outputNumEditor.setText (juce::String (newState.getProperty ("OutputMidiNum", 1)));
-        // TODO:
-        // outputMsgTypeComboBox.setSelectedId (newState.getProperty ("MsgType", OSCBridgeChannel::MidiNote).getObject() + 1);
+
+        auto msgType = newState.getProperty ("MsgType", OSCBridgeChannel::MidiNote);
+        outputMsgTypeComboBox.setSelectedItemIndex (static_cast<int> (msgType));
         muteButton.setToggleState (newState.getProperty ("Muted", false), juce::dontSendNotification);
     }
 

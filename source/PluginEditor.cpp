@@ -3,8 +3,6 @@
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
-    juce::ignoreUnused (processorRef);
-
     // Set default look and feel
     lookAndFeel = std::make_unique<BirdHouse::BirdHouseLookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel (lookAndFeel.get());
@@ -139,6 +137,7 @@ void PluginEditor::paint (juce::Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
+    // Update connection status
     auto connectionStatus = processorRef.oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("ConnectionStatus", false);
 
     if (connectionStatus)
@@ -154,13 +153,26 @@ void PluginEditor::paint (juce::Graphics& g)
         connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
         connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
     }
+
+  // Update the activity indicators
+
+  auto chanIndex = 0u;
+  for(auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
+  {
+    auto processorChan = processorRef.getChannel(chanIndex);
+
+    oscBridgeChannelEditor->updateActivityForChan(*processorChan);
+
+    chanIndex++;
+  }
+
 }
 
 void PluginEditor::resized()
 {
     auto area = getLocalBounds();
     auto totalChannels = oscBridgeChannelEditors.size() + 4; // Including title, port, and hyperlink in count
-    auto itemHeight = static_cast<int>(static_cast<float>(area.getHeight()) / totalChannels);
+    auto itemHeight = static_cast<int> (static_cast<float> (area.getHeight()) / totalChannels);
 
     // Title area at the top
     titleLabel.setBounds (area.removeFromTop (itemHeight));
@@ -177,9 +189,9 @@ void PluginEditor::resized()
     auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
 
     // Split the bottom area into three parts
-    auto portLabelWidth = static_cast<int>(bottomArea.getWidth() * 0.1f); // Adjust the ratio as needed
-    auto portEditorWidth = static_cast<int>(bottomArea.getWidth() * (1.0f / 6.0f)); // 1/7th of the width
-    auto hyperlinkWidth = static_cast<int>(bottomArea.getWidth() * 0.2f); // Adjust as needed
+    auto portLabelWidth = static_cast<int> (bottomArea.getWidth() * 0.1f); // Adjust the ratio as needed
+    auto portEditorWidth = static_cast<int> (bottomArea.getWidth() * (1.0f / 6.0f)); // 1/7th of the width
+    auto hyperlinkWidth = static_cast<int> (bottomArea.getWidth() * 0.2f); // Adjust as needed
 
     // Place portLabel on the left side of the bottom area
     portLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));

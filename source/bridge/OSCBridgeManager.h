@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OSCBridgeChannel.h"
+#include <functional>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_osc/juce_osc.h>
@@ -18,10 +19,10 @@ public:
         mOscReceiver.addListener (this);
     }
 
-    // ~OSCBridgeManager() override
-    // {
-    //     oscReceiver.removeListener (this);
-    // }
+    ~OSCBridgeManager() override
+    {
+        stopListening();
+    }
 
     bool startListening (int port)
     {
@@ -38,6 +39,14 @@ public:
         if (channel)
         {
             mChannels.emplace_back (channel);
+        }
+    }
+
+    void addCallbackToChannel (std::size_t chanNum, auto newCallback)
+    {
+        if (chanNum < mChannels.size())
+        {
+            mChannels[chanNum]->addCallback (newCallback);
         }
     }
 

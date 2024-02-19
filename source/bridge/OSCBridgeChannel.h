@@ -13,6 +13,8 @@ public:
         MidiBend
     };
 
+    using OSCCallbackFunc = std::function<void (float, bool, const juce::OSCMessage&)>;
+
     OSCBridgeChannel (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
         : mPath (path), mInputMin (fromMin), mInputMax (fromMax), mOutputMidiChan (outputMidiChannel), mOutMidiNum (outputNum), mMsgType (outputType)
     {
@@ -30,6 +32,11 @@ public:
           muted (channelState.getProperty ("Muted", false))
     {
         mLastValueTime = juce::Time::currentTimeMillis();
+    }
+
+    auto normalizeValue (auto rawValue) -> auto
+    {
+        return juce::jmap (rawValue, mInputMin, mInputMax, 0.0f, 1.0f);
     }
 
     void setMuted (bool shouldBeMuted)
@@ -79,9 +86,9 @@ public:
      *
      * @return auto
      */
-    auto getNormalizedValue() const
+    auto getNormalizedValue()
     {
-        return juce::jmap (mRawValue, mInputMin, mInputMax, 0.0f, 1.0f);
+        return normalizeValue (mRawValue);
     }
 
     /**
@@ -119,6 +126,11 @@ public:
         }
     }
 
+    void addCallback (OSCCallbackFunc newCallback)
+    {
+        mCallbacks.push_back (std::move (newCallback));
+    }
+
     auto matchesOSCAddress (const juce::String& address) const
     {
         return address == mPath;
@@ -126,34 +138,70 @@ public:
 
     void handleOSCMessage (const juce::OSCMessage& message)
     {
+        auto messageAccepted = message.size() == 1 && (message[0].isFloat32() || message[0].isInt32());
+        auto normalizedValue = 0.f;
+
+        juce::Logger::writeToLog ("received message");
+        mLastValueTime = juce::Time::currentTimeMillis();
+
+        // Retrieve the value from the message
+        if (messageAccepted)
+        {
+            mRawValue = 0.f;
+
+            if (message[0].isFloat32())
+            {
+                mRawValue = message[0].getFloat32();
+            }
+            else if (message[0].isInt32())
+            {
+                mRawValue = static_cast<float> (message[0].getInt32());
+            }
+
+            normalizedValue = normalizeValue (mRawValue);
+
+            // Update the atomic values, allowing safe access to latest data from the UI thread
+            updateAtomic (normalizedValue);
+        }
+
+        // Call external callbacks
+        for (auto& callback : mCallbacks)
+        {
+            callback (normalizedValue, messageAccepted, message);
+        }
+
+        // Send midi if not muted
         if (!muted)
         {
-            juce::Logger::writeToLog ("received message");
-            mLastValueTime = juce::Time::currentTimeMillis();
-
-            if (message.size() == 1 && (message[0].isFloat32() || message[0].isInt32()))
-            {
-                mRawValue = 0.f;
-
-                if (message[0].isFloat32())
-                {
-                    mRawValue = message[0].getFloat32();
-                }
-                else if (message[0].isInt32())
-                {
-                    mRawValue = static_cast<float> (message[0].getInt32());
-                }
-
-                auto midiMessage = convertToMidiMessage (mRawValue);
-                juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
-                addMidiMessageToBuffer (midiMessage);
-            }
+            auto midiMessage = convertToMidiMessage (normalizedValue);
+            juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
+            addMidiMessageToBuffer (midiMessage);
         }
     }
 
-private:
-    juce::int64 mLastValueTime { 0 }; // Tracks the last time a value > 0.0 was received
+    inline auto& getLastValueAtomic()
+    {
+        return mLastValue;
+    }
 
+    inline auto& getLastValueVersionAtomic()
+    {
+        return mLastValueVersion;
+    }
+
+private:
+    // Atomics for the channel's state
+    std::atomic<float> mLastValue { 0.f };
+    std::atomic<int> mLastValueVersion { 0 };
+
+    inline void updateAtomic (float newValue)
+    {
+        mLastValue.store (newValue, std::memory_order_release);
+        mLastValueVersion.store (mLastValueVersion.load() + 1, std::memory_order_release);
+    }
+
+    std::vector<OSCCallbackFunc> mCallbacks {};
+    juce::int64 mLastValueTime { 0 }; // Tracks the last time a value > 0.0 was received
     juce::String mPath;
     float mInputMin { 0.f }, mInputMax { 1.0f }, mRawValue { 0.f };
     int mOutputMidiChan, mOutMidiNum;
@@ -163,10 +211,8 @@ private:
     bool muted;
 
     // Converts the raw value to a MIDI message
-    juce::MidiMessage convertToMidiMessage (auto rawValue)
+    juce::MidiMessage convertToMidiMessage (auto normalizedValue)
     {
-        // Normalize the raw value to a 0-1 range
-        float normalizedValue = juce::jmap (rawValue, mInputMin, mInputMax, 0.0f, 1.0f);
         juce::MidiMessage midiMessage;
 
         switch (mMsgType)

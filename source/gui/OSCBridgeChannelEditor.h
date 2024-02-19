@@ -177,6 +177,9 @@ public:
         // Set text justification
         auto justification = juce::Justification::left;
         setJustification (justification);
+
+        // ActivityIndicator
+        addAndMakeVisible (activityIndicator);
     }
 
     void setColour (juce::Colour colour)
@@ -242,6 +245,24 @@ public:
         outputMsgTypeComboBox.setSelectedId (type + 1);
     }
 
+    void updateActivityForChan (auto& chan)
+    {
+        auto versionAtomic = chan.getLastValueVersionAtomic().load();
+        auto& valueAtomic = chan.getLastValueAtomic();
+
+        if (versionAtomic != lastValueVersion)
+        {
+            // New data
+            activityIndicator.addValue (valueAtomic.load());
+            lastValueVersion = versionAtomic;
+        }
+    }
+
+    void addActivity (auto newValue)
+    {
+        activityIndicator.addValue (newValue);
+    }
+
     void resized() override
     {
         const auto numElements = OSCBridgeChannelLabels::Labels::NumLabels;
@@ -250,6 +271,7 @@ public:
         auto area = getLocalBounds();
         auto width = area.getWidth() / numElements;
 
+        activityIndicator.setBounds (area.removeFromLeft (width));
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
         inputMaxEditor.setBounds (area.removeFromLeft (width));
@@ -281,6 +303,8 @@ public:
         muteButton.setToggleState (newState.getProperty ("Muted", false), juce::dontSendNotification);
     }
 
+    auto& getActivityIndicator() { return activityIndicator; }
+
 private:
     // GUI Components
     juce::TextEditor pathEditor;
@@ -291,7 +315,11 @@ private:
     juce::ComboBox outputMsgTypeComboBox;
     juce::TextButton muteButton { "Mute" };
 
+    ActivityIndicator activityIndicator;
+
     juce::ValueTree oscBridgeState;
+
+    int lastValueVersion { -1 };
 
     void updateChannelSettings (auto whatChanged)
     {

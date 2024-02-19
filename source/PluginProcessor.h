@@ -49,44 +49,12 @@ public:
 
     juce::ValueTree oscBridgeState { createEmptyOSCState() };
 
+    juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "PUBLIC", {} };
+
     void updateListenerStates();
     void setStateChangeCallbacks();
 
-    auto getRawValueFromChannel (int channel) -> float
-    {
-        if (channel < 0 || channel >= numBridgeChans)
-        {
-            return 0.0f;
-        }
-        else
-        {
-            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->getRawValue();
-        }
-    }
-
-    auto getNormalizedValueFromChannel (int channel) -> float
-    {
-        if (channel < 0 || channel >= numBridgeChans)
-        {
-            return 0.0f;
-        }
-        else
-        {
-            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->getNormalizedValue();
-        }
-    }
-
-    auto getTimeSinceLastValueChannel (auto channel) -> auto
-    {
-        if (channel < 0 || channel >= numBridgeChans)
-        {
-            return 0;
-        }
-        else
-        {
-            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->timeSinceLastValue();
-        }
-    }
+    auto& getChannel (auto index) { return mOscBridgeChannels[index]; }
 
 private:
     std::vector<std::shared_ptr<OSCBridgeChannel>> mOscBridgeChannels;

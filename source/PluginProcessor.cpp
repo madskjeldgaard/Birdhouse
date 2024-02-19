@@ -29,9 +29,18 @@ PluginProcessor::PluginProcessor()
 
     // Register all channels with the OSCBridge manager
     mOscBridgeManager = std::make_shared<OSCBridgeManager>();
+    auto chanNum = 0u;
     for (auto& chan : mOscBridgeChannels)
     {
+        // Register the channel with the manager
         mOscBridgeManager->registerChannel (chan);
+
+        // Add a custom callback to each channel
+        // mOscBridgeManager->addCallbackToChannel (chanNum++, [&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
+        //     juce::ignoreUnused (normalizedValue, valueAccepted, rawOSCMessage);
+        //     juce::Logger::writeToLog ("Normalized value: " + juce::String (normalizedValue) + " Value accepted: " + juce::String (static_cast<int> (valueAccepted)) + " Raw OSC message: " + rawOSCMessage.getAddressPattern().toString());
+
+        // });
     }
 }
 
@@ -191,6 +200,8 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
         if (xmlState->hasTagName (oscBridgeState.getType()))
         {
             oscBridgeState = juce::ValueTree::fromXml (*xmlState);
+            mPublicState.replaceState (oscBridgeState);
+
             updateListenerStates();
         }
     }

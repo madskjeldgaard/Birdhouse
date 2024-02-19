@@ -5,6 +5,7 @@ class OSCBridgeChannelLabels : public juce::Component
 {
 public:
     enum Labels {
+        Activity,
         Path,
         InputMin,
         InputMax,
@@ -12,7 +13,6 @@ public:
         MidiNum,
         OutputMsgType,
         Muted,
-        // Activity,
         NumLabels
     };
 
@@ -31,7 +31,7 @@ public:
         }
 
         // Activity
-        // labels[Activity]->setText ("Activity", juce::dontSendNotification);
+        labels[Activity]->setText ("Activity", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);

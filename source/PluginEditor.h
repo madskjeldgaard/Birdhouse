@@ -2,6 +2,7 @@
 
 #include "BinaryData.h"
 #include "PluginProcessor.h"
+#include "bridge/OSCActivityListener.h"
 #include "gui/BirdHouseLookAndFeel.h"
 #include "gui/OSCBridgeChannelEditor.h"
 #include "gui/OSCBridgeChannelLabels.h"
@@ -22,18 +23,19 @@ private:
     // access the processor object that created it.
     PluginProcessor& processorRef;
 
-    juce::Label titleLabel { "BirdHouse" };
-
-    juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+    // Labels
     std::unique_ptr<BirdHouse::BirdHouseLookAndFeel> lookAndFeel;
-
-    juce::Label portLabel { "Port" }, connectionStatusTitleLabel { "Connection Status" }, connectionStatusLabel { "Disconnected" };
-    juce::TextEditor portEditor;
-    std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
-
+    juce::Label titleLabel { "BirdHouse" }, portLabel { "Port" }, connectionStatusTitleLabel { "Connection Status" }, connectionStatusLabel { "Disconnected" };
     std::unique_ptr<OSCBridgeChannelLabels> oscBridgeChannelLabels;
 
-    // OSCBridgeChannelEditor oscBridgeChannelEditor;
+    // Link to help / info
+    juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+
+    // Port
+    juce::TextEditor portEditor;
+
+    // GUI for each channel
+    std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

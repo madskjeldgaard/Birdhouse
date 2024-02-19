@@ -42,12 +42,12 @@ public:
         };
 
         // Return -> focus lost
-        pathEditor.onReturnKey = [this] {
+        pathEditor.onReturnKey = [&] {
             pathEditor.focusLost (FocusChangeType::focusChangedDirectly);
         };
 
         // Focus lost -> update state
-        pathEditor.onFocusLost = [this] {
+        pathEditor.onFocusLost = [&] {
             const auto whatChanged = juce::Identifier ("Path");
             updateChannelSettings (whatChanged);
         };
@@ -56,16 +56,16 @@ public:
         inputMinEditor.setInputRestrictions (5, "0123456789.-");
 
         // text change-> filter text
-        inputMinEditor.onTextChange = [this] {
+        inputMinEditor.onTextChange = [&] {
         };
 
         // Return -> focus lost
-        inputMinEditor.onReturnKey = [this] {
+        inputMinEditor.onReturnKey = [&] {
             inputMinEditor.focusLost (FocusChangeType::focusChangedDirectly);
         };
 
         // Focus lost -> update state
-        inputMinEditor.onFocusLost = [this] {
+        inputMinEditor.onFocusLost = [&] {
             const auto whatChanged = juce::Identifier ("InputMin");
             updateChannelSettings (whatChanged);
         };
@@ -73,17 +73,17 @@ public:
         addAndMakeVisible (inputMaxEditor);
         inputMaxEditor.setInputRestrictions (5, "0123456789.-");
         // Filter text
-        inputMaxEditor.onTextChange = [this] {
+        inputMaxEditor.onTextChange = [&] {
 
         };
 
         // Return -> focus lost
-        inputMaxEditor.onReturnKey = [this] {
+        inputMaxEditor.onReturnKey = [&] {
             inputMaxEditor.focusLost (FocusChangeType::focusChangedDirectly);
         };
 
         // Focus lost -> update state
-        inputMaxEditor.onFocusLost = [this] {
+        inputMaxEditor.onFocusLost = [&] {
             const auto whatChanged = juce::Identifier ("InputMax");
             updateChannelSettings (whatChanged);
         };
@@ -109,12 +109,12 @@ public:
         };
 
         // Return -> focus lost
-        outputMidiChannelEditor.onReturnKey = [this] {
+        outputMidiChannelEditor.onReturnKey = [&] {
             outputMidiChannelEditor.focusLost (FocusChangeType::focusChangedDirectly);
         };
 
         // Focus lost -> update state
-        outputMidiChannelEditor.onFocusLost = [this] {
+        outputMidiChannelEditor.onFocusLost = [&] {
             const auto whatChanged = juce::Identifier ("OutputMidiChannel");
             updateChannelSettings (whatChanged);
         };
@@ -123,7 +123,7 @@ public:
         outputNumEditor.setInputRestrictions (3, "0123456789");
 
         // Filter text
-        outputNumEditor.onTextChange = [this] {
+        outputNumEditor.onTextChange = [&] {
             // Clip to midi range
             auto value = outputNumEditor.getText().getIntValue();
 
@@ -141,12 +141,12 @@ public:
         };
 
         // Return -> focus lost
-        outputNumEditor.onReturnKey = [this] {
+        outputNumEditor.onReturnKey = [&] {
             outputNumEditor.focusLost (FocusChangeType::focusChangedDirectly);
         };
 
         // Focus lost -> update state
-        outputNumEditor.onFocusLost = [this] {
+        outputNumEditor.onFocusLost = [&] {
             const auto whatChanged = juce::Identifier ("OutputMidiNum");
             updateChannelSettings (whatChanged);
         };
@@ -155,7 +155,7 @@ public:
         outputMsgTypeComboBox.addItem ("CC", OSCBridgeChannel::MidiCC + 1);
         // outputMsgTypeComboBox.addItem ("Bend", OSCBridgeChannel::MidiBend + 1);
         addAndMakeVisible (outputMsgTypeComboBox);
-        outputMsgTypeComboBox.onChange = [this] {
+        outputMsgTypeComboBox.onChange = [&] {
             const auto whatChanged = juce::Identifier ("MsgType");
             updateChannelSettings (whatChanged);
         };
@@ -169,7 +169,7 @@ public:
         muteButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
         muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::red);
         // Set up toggle button callback
-        muteButton.onClick = [this] {
+        muteButton.onClick = [&] {
             const auto whatChanged = juce::Identifier ("Muted");
             updateChannelSettings (whatChanged);
         };

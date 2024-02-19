@@ -14,22 +14,22 @@ public:
     };
 
     OSCBridgeChannel (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
-        : path (path), inputMin (fromMin), inputMax (fromMax), outputMidiChan (outputMidiChannel), outMidiNum (outputNum), msgType (outputType)
+        : mPath (path), mInputMin (fromMin), mInputMax (fromMax), mOutputMidiChan (outputMidiChannel), mOutMidiNum (outputNum), mMsgType (outputType)
     {
-        lastValueTime = juce::Time::currentTimeMillis();
+        mLastValueTime = juce::Time::currentTimeMillis();
     }
 
     // An alternative constructor that takes a ValueTree
     OSCBridgeChannel (juce::ValueTree channelState)
-        : path (channelState.getProperty ("Path").toString()),
-          inputMin (channelState.getProperty ("InputMin")),
-          inputMax (channelState.getProperty ("InputMax")),
-          outputMidiChan (channelState.getProperty ("OutputMidiChannel")),
-          outMidiNum (channelState.getProperty ("OutputMidiNum")),
-          msgType (static_cast<MsgType> (static_cast<int> (channelState.getProperty ("MsgType")))),
+        : mPath (channelState.getProperty ("Path").toString()),
+          mInputMin (channelState.getProperty ("InputMin")),
+          mInputMax (channelState.getProperty ("InputMax")),
+          mOutputMidiChan (channelState.getProperty ("OutputMidiChannel")),
+          mOutMidiNum (channelState.getProperty ("OutputMidiNum")),
+          mMsgType (static_cast<MsgType> (static_cast<int> (channelState.getProperty ("MsgType")))),
           muted (channelState.getProperty ("Muted", false))
     {
-        lastValueTime = juce::Time::currentTimeMillis();
+        mLastValueTime = juce::Time::currentTimeMillis();
     }
 
     void setMuted (bool shouldBeMuted)
@@ -40,38 +40,38 @@ public:
     // Setters
     void setPath (const juce::String& newPath)
     {
-        path = newPath;
+        mPath = newPath;
     }
 
     void setInputMin (auto newFromMin)
     {
-        inputMin = newFromMin;
+        mInputMin = newFromMin;
     }
 
     void setInputMax (auto newFromMax)
     {
-        inputMax = newFromMax;
+        mInputMax = newFromMax;
     }
 
     void setOutputMidiChannel (auto newOutputMidiChannel)
     {
-        outputMidiChan = newOutputMidiChannel;
+        mOutputMidiChan = newOutputMidiChannel;
     }
 
     void setOutputMidiNum (auto newOutputNum)
     {
         juce::Logger::writeToLog ("Setting output num" + juce::String (newOutputNum));
-        outMidiNum = newOutputNum;
+        mOutMidiNum = newOutputNum;
     }
 
     void setOutputType (auto newOutputType)
     {
-        msgType = newOutputType;
+        mMsgType = newOutputType;
     }
 
     auto getRawValue() const
     {
-        return rawValue;
+        return mRawValue;
     }
 
     /**
@@ -81,7 +81,7 @@ public:
      */
     auto getNormalizedValue() const
     {
-        return juce::jmap (rawValue, inputMin, inputMax, 0.0f, 1.0f);
+        return juce::jmap (mRawValue, mInputMin, mInputMax, 0.0f, 1.0f);
     }
 
     /**
@@ -93,7 +93,7 @@ public:
     {
         auto currentTime = juce::Time::currentTimeMillis();
 
-        auto timeSinceLastValue = currentTime - lastValueTime;
+        auto timeSinceLastValue = currentTime - mLastValueTime;
 
         return timeSinceLastValue;
     }
@@ -121,7 +121,7 @@ public:
 
     auto matchesOSCAddress (const juce::String& address) const
     {
-        return address == path;
+        return address == mPath;
     }
 
     void handleOSCMessage (const juce::OSCMessage& message)
@@ -129,22 +129,22 @@ public:
         if (!muted)
         {
             juce::Logger::writeToLog ("received message");
-            lastValueTime = juce::Time::currentTimeMillis();
+            mLastValueTime = juce::Time::currentTimeMillis();
 
             if (message.size() == 1 && (message[0].isFloat32() || message[0].isInt32()))
             {
-                rawValue = 0.f;
+                mRawValue = 0.f;
 
                 if (message[0].isFloat32())
                 {
-                    rawValue = message[0].getFloat32();
+                    mRawValue = message[0].getFloat32();
                 }
                 else if (message[0].isInt32())
                 {
-                    rawValue = static_cast<float> (message[0].getInt32());
+                    mRawValue = static_cast<float> (message[0].getInt32());
                 }
 
-                auto midiMessage = convertToMidiMessage (rawValue);
+                auto midiMessage = convertToMidiMessage (mRawValue);
                 juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
                 addMidiMessageToBuffer (midiMessage);
             }
@@ -152,12 +152,12 @@ public:
     }
 
 private:
-    juce::int64 lastValueTime { 0 }; // Tracks the last time a value > 0.0 was received
+    juce::int64 mLastValueTime { 0 }; // Tracks the last time a value > 0.0 was received
 
-    juce::String path;
-    float inputMin { 0.f }, inputMax { 1.0f }, rawValue { 0.f };
-    int outputMidiChan, outMidiNum;
-    MsgType msgType;
+    juce::String mPath;
+    float mInputMin { 0.f }, mInputMax { 1.0f }, mRawValue { 0.f };
+    int mOutputMidiChan, mOutMidiNum;
+    MsgType mMsgType;
     juce::MidiBuffer mInternalBuffer;
 
     bool muted;
@@ -166,20 +166,20 @@ private:
     juce::MidiMessage convertToMidiMessage (auto rawValue)
     {
         // Normalize the raw value to a 0-1 range
-        float normalizedValue = juce::jmap (rawValue, inputMin, inputMax, 0.0f, 1.0f);
+        float normalizedValue = juce::jmap (rawValue, mInputMin, mInputMax, 0.0f, 1.0f);
         juce::MidiMessage midiMessage;
 
-        switch (msgType)
+        switch (mMsgType)
         {
             case MidiNote:
-                midiMessage = (normalizedValue == 0.f) ? juce::MidiMessage::noteOff (outputMidiChan, outMidiNum, static_cast<uint8_t> (normalizedValue * 127))
-                                                       : juce::MidiMessage::noteOn (outputMidiChan, outMidiNum, static_cast<uint8_t> (normalizedValue * 127));
+                midiMessage = (normalizedValue == 0.f) ? juce::MidiMessage::noteOff (mOutputMidiChan, mOutMidiNum, static_cast<uint8_t> (normalizedValue * 127))
+                                                       : juce::MidiMessage::noteOn (mOutputMidiChan, mOutMidiNum, static_cast<uint8_t> (normalizedValue * 127));
                 break;
             case MidiCC:
-                midiMessage = juce::MidiMessage::controllerEvent (outputMidiChan, outMidiNum, static_cast<uint8_t> (normalizedValue * 127));
+                midiMessage = juce::MidiMessage::controllerEvent (mOutputMidiChan, mOutMidiNum, static_cast<uint8_t> (normalizedValue * 127));
                 break;
             case MidiBend:
-                midiMessage = juce::MidiMessage::pitchWheel (outputMidiChan, static_cast<int> (normalizedValue * 16383) - 8192);
+                midiMessage = juce::MidiMessage::pitchWheel (mOutputMidiChan, static_cast<int> (normalizedValue * 16383) - 8192);
                 break;
         }
 

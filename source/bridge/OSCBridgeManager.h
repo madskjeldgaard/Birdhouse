@@ -15,7 +15,7 @@ class OSCBridgeManager : private juce::OSCReceiver, private juce::OSCReceiver::L
 public:
     OSCBridgeManager()
     {
-        oscReceiver.addListener (this);
+        mOscReceiver.addListener (this);
     }
 
     // ~OSCBridgeManager() override
@@ -25,26 +25,26 @@ public:
 
     bool startListening (int port)
     {
-        return oscReceiver.connect (port);
+        return mOscReceiver.connect (port);
     }
 
     void stopListening()
     {
-        oscReceiver.disconnect();
+        mOscReceiver.disconnect();
     }
 
     void registerChannel (std::shared_ptr<OSCBridgeChannel> channel)
     {
         if (channel)
         {
-            channels.emplace_back (channel);
+            mChannels.emplace_back (channel);
         }
     }
 
 protected:
     void oscMessageReceived (const juce::OSCMessage& message) override
     {
-        for (auto& channel : channels)
+        for (auto& channel : mChannels)
         {
             if (channel->matchesOSCAddress (message.getAddressPattern().toString()))
             {
@@ -54,6 +54,6 @@ protected:
     }
 
 private:
-    juce::OSCReceiver oscReceiver;
-    std::vector<std::shared_ptr<OSCBridgeChannel>> channels;
+    juce::OSCReceiver mOscReceiver;
+    std::vector<std::shared_ptr<OSCBridgeChannel>> mChannels;
 };

@@ -16,22 +16,22 @@ PluginProcessor::PluginProcessor()
     for (auto i = 0; i < numBridgeChans; ++i)
     {
         auto chanState = oscBridgeState.getChildWithName ("ChannelSettings").getChild (i);
-        chanListeners.emplace_back (std::make_shared<LambdaStateListener> (chanState));
+        mChanListeners.emplace_back (std::make_shared<LambdaStateListener> (chanState));
 
         // Set up the channel
-        oscBridgeChannels.push_back (std::make_shared<OSCBridgeChannel> (chanState));
+        mOscBridgeChannels.push_back (std::make_shared<OSCBridgeChannel> (chanState));
     }
 
     auto globalState = oscBridgeState.getChildWithName ("GlobalSettings");
-    globalStateListener = std::make_shared<LambdaStateListener> (globalState);
+    mGlobalStateListener = std::make_shared<LambdaStateListener> (globalState);
 
     setStateChangeCallbacks();
 
     // Register all channels with the OSCBridge manager
-    oscBridgeManager = std::make_shared<OSCBridgeManager>();
-    for (auto& chan : oscBridgeChannels)
+    mOscBridgeManager = std::make_shared<OSCBridgeManager>();
+    for (auto& chan : mOscBridgeChannels)
     {
-        oscBridgeManager->registerChannel (chan);
+        mOscBridgeManager->registerChannel (chan);
     }
 }
 
@@ -112,7 +112,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 
     auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
-    auto connectionResult = oscBridgeManager->startListening (port);
+    auto connectionResult = mOscBridgeManager->startListening (port);
     oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
@@ -120,7 +120,7 @@ void PluginProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    oscBridgeManager->stopListening();
+    mOscBridgeManager->stopListening();
 }
 
 bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -150,7 +150,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 {
     juce::ScopedNoDenormals noDenormals;
 
-    for (auto& chan : oscBridgeChannels)
+    for (auto& chan : mOscBridgeChannels)
     {
         chan->appendMessagesTo (midiMessages);
     }
@@ -249,10 +249,10 @@ juce::ValueTree PluginProcessor::createEmptyOSCState()
 
 void PluginProcessor::updateListenerStates()
 {
-    globalStateListener->setState (oscBridgeState.getChildWithName ("GlobalSettings"));
+    mGlobalStateListener->setState (oscBridgeState.getChildWithName ("GlobalSettings"));
 
     auto chanNum = 0;
-    for (auto& listener : chanListeners)
+    for (auto& listener : mChanListeners)
     {
         listener->setState (oscBridgeState.getChildWithName ("ChannelSettings").getChild (chanNum++));
     }
@@ -262,53 +262,53 @@ void PluginProcessor::setStateChangeCallbacks()
 {
     // Set up channel listeners
     auto i = 0u;
-    for (auto& chanListener : chanListeners)
+    for (auto& chanListener : mChanListeners)
     {
         // Set defualt callback for state changes in properties
         chanListener->setChangedCallback ([this, i] (auto whatChanged) {
-            auto chanState = oscBridgeState.getChildWithName ("ChannelSettings").getChild (i);
+            auto chanState = oscBridgeState.getChildWithName ("ChannelSettings").getChild (static_cast<int> (i));
 
             juce::Logger::writeToLog ("Settings changed in channel" + juce::String (i) + " " + whatChanged.toString() + " " + chanState.getProperty (whatChanged).toString());
             if (whatChanged == juce::Identifier ("Path"))
             {
                 auto newPath = chanState.getProperty ("Path");
-                oscBridgeChannels[i]->setPath (newPath);
+                mOscBridgeChannels[i]->setPath (newPath);
             }
 
             if (whatChanged == juce::Identifier ("InputMin"))
             {
                 auto newMin = chanState.getProperty ("InputMin");
-                oscBridgeChannels[i]->setInputMin (newMin);
+                mOscBridgeChannels[i]->setInputMin (newMin);
             }
 
             if (whatChanged == juce::Identifier ("InputMax"))
             {
                 auto newMax = chanState.getProperty ("InputMax");
-                oscBridgeChannels[i]->setInputMax (newMax);
+                mOscBridgeChannels[i]->setInputMax (newMax);
             }
 
             if (whatChanged == juce::Identifier ("OutputMidiChannel"))
             {
                 auto newChannel = chanState.getProperty ("OutputMidiChannel");
-                oscBridgeChannels[i]->setOutputMidiChannel (newChannel);
+                mOscBridgeChannels[i]->setOutputMidiChannel (newChannel);
             }
 
             if (whatChanged == juce::Identifier ("OutputMidiNum"))
             {
                 auto newNum = chanState.getProperty ("OutputMidiNum");
-                oscBridgeChannels[i]->setOutputMidiNum (static_cast<int> (newNum));
+                mOscBridgeChannels[i]->setOutputMidiNum (static_cast<int> (newNum));
             }
 
             if (whatChanged == juce::Identifier ("MsgType"))
             {
                 auto newType = chanState.getProperty ("MsgType");
-                oscBridgeChannels[i]->setOutputType (static_cast<OSCBridgeChannel::MsgType> (static_cast<int> (newType)));
+                mOscBridgeChannels[i]->setOutputType (static_cast<OSCBridgeChannel::MsgType> (static_cast<int> (newType)));
             }
 
             if (whatChanged == juce::Identifier ("Muted"))
             {
                 auto newMuted = chanState.getProperty ("Muted");
-                oscBridgeChannels[i]->setMuted (newMuted);
+                mOscBridgeChannels[i]->setMuted (newMuted);
             }
         });
 
@@ -316,7 +316,7 @@ void PluginProcessor::setStateChangeCallbacks()
     }
 
     // Global state
-    globalStateListener->setChangedCallback ([this] (auto whatChanged) {
+    mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
         auto globalSettings = oscBridgeState.getChildWithName ("GlobalSettings");
         juce::Logger::writeToLog ("Global state changed: " + whatChanged.toString());
 
@@ -325,8 +325,8 @@ void PluginProcessor::setStateChangeCallbacks()
             auto newPort = globalSettings.getProperty ("Port");
             juce::Logger::writeToLog ("Port changed to " + juce::String (newPort));
 
-            oscBridgeManager->stopListening();
-            auto connectionResult = oscBridgeManager->startListening (newPort);
+            mOscBridgeManager->stopListening();
+            auto connectionResult = mOscBridgeManager->startListening (newPort);
 
             globalSettings.setProperty ("ConnectionStatus", connectionResult, nullptr);
         }

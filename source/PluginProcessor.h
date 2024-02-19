@@ -60,7 +60,7 @@ public:
         }
         else
         {
-            return oscBridgeChannels[channel]->getRawValue();
+            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->getRawValue();
         }
     }
 
@@ -72,11 +72,11 @@ public:
         }
         else
         {
-            return oscBridgeChannels[channel]->getNormalizedValue();
+            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->getNormalizedValue();
         }
     }
 
-    auto getTimeSinceLastValueChannel (int channel) -> int
+    auto getTimeSinceLastValueChannel (auto channel) -> auto
     {
         if (channel < 0 || channel >= numBridgeChans)
         {
@@ -84,16 +84,16 @@ public:
         }
         else
         {
-            return oscBridgeChannels[channel]->timeSinceLastValue();
+            return mOscBridgeChannels[static_cast<std::size_t> (channel)]->timeSinceLastValue();
         }
     }
 
 private:
-    std::vector<std::shared_ptr<OSCBridgeChannel>> oscBridgeChannels;
-    std::shared_ptr<OSCBridgeManager> oscBridgeManager;
+    std::vector<std::shared_ptr<OSCBridgeChannel>> mOscBridgeChannels;
+    std::shared_ptr<OSCBridgeManager> mOscBridgeManager;
 
-    std::vector<std::shared_ptr<LambdaStateListener>> chanListeners {};
-    std::shared_ptr<LambdaStateListener> globalStateListener;
+    std::vector<std::shared_ptr<LambdaStateListener>> mChanListeners {};
+    std::shared_ptr<LambdaStateListener> mGlobalStateListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

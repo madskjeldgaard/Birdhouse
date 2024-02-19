@@ -28,6 +28,7 @@ public:
     // Called when the state of the ValueTree changes
     void valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override
     {
+        (void) treeWhosePropertyHasChanged;
         juce::Logger::writeToLog ("ValueTree property changed: " + property.toString());
         mChangedCallback (property);
     }

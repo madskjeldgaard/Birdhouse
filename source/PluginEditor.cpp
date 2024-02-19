@@ -160,7 +160,7 @@ void PluginEditor::resized()
 {
     auto area = getLocalBounds();
     auto totalChannels = oscBridgeChannelEditors.size() + 4; // Including title, port, and hyperlink in count
-    auto itemHeight = area.getHeight() / totalChannels;
+    auto itemHeight = static_cast<int>(static_cast<float>(area.getHeight()) / totalChannels);
 
     // Title area at the top
     titleLabel.setBounds (area.removeFromTop (itemHeight));
@@ -177,9 +177,9 @@ void PluginEditor::resized()
     auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
 
     // Split the bottom area into three parts
-    auto portLabelWidth = bottomArea.getWidth() * 0.1f; // Adjust the ratio as needed
-    auto portEditorWidth = bottomArea.getWidth() * (1.0f / 6.0f); // 1/7th of the width
-    auto hyperlinkWidth = bottomArea.getWidth() * 0.2f; // Adjust as needed
+    auto portLabelWidth = static_cast<int>(bottomArea.getWidth() * 0.1f); // Adjust the ratio as needed
+    auto portEditorWidth = static_cast<int>(bottomArea.getWidth() * (1.0f / 6.0f)); // 1/7th of the width
+    auto hyperlinkWidth = static_cast<int>(bottomArea.getWidth() * 0.2f); // Adjust as needed
 
     // Place portLabel on the left side of the bottom area
     portLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));

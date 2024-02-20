@@ -10,8 +10,8 @@ PluginProcessor::PluginProcessor()
     #endif
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-    )
-
+            ),
+      oscBridgeState (createEmptyOSCState())
 {
     for (auto i = 0; i < numBridgeChans; ++i)
     {
@@ -29,7 +29,7 @@ PluginProcessor::PluginProcessor()
 
     // Register all channels with the OSCBridge manager
     mOscBridgeManager = std::make_shared<OSCBridgeManager>();
-    auto chanNum = 0u;
+    // auto chanNum = 0u;
     for (auto& chan : mOscBridgeChannels)
     {
         // Register the channel with the manager
@@ -42,6 +42,10 @@ PluginProcessor::PluginProcessor()
 
         // });
     }
+
+    auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
+    auto connectionResult = mOscBridgeManager->startListening (port);
+    oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
 PluginProcessor::~PluginProcessor()
@@ -136,7 +140,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
         chan->setInputMax (inMax);
         chan->setOutputMidiChannel (outChan);
         chan->setOutputMidiNum (outNum);
-        chan->setOutputType (static_cast<OSCBridgeChannel::MsgType>(static_cast<int>(msgType)));
+        chan->setOutputType (static_cast<OSCBridgeChannel::MsgType> (static_cast<int> (msgType)));
         chan->setMuted (muted);
 
         index++;
@@ -151,7 +155,9 @@ void PluginProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    mOscBridgeManager->stopListening();
+    // mOscBridgeManager->stopListening();
+
+    juce::Logger::writeToLog ("Releasing resources");
 }
 
 bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -187,6 +193,9 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     buffer.clear();
+
+    auto time = juce::Time::getMillisecondCounterHiRes();
+    juce::Logger::writeToLog ("Processing block at time: " + juce::String (time));
     // Generate noise
     // -100 db in ampltiude
     // auto level = 0.001f;
@@ -196,7 +205,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 //==============================================================================
 bool PluginProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
@@ -300,7 +309,6 @@ void PluginProcessor::setStateChangeCallbacks()
         chanListener->setChangedCallback ([this, i] (auto whatChanged) {
             auto chanState = oscBridgeState.getChildWithName ("ChannelSettings").getChild (static_cast<int> (i));
 
-            juce::Logger::writeToLog ("Settings changed in channel" + juce::String (i) + " " + whatChanged.toString() + " " + chanState.getProperty (whatChanged).toString());
             if (whatChanged == juce::Identifier ("Path"))
             {
                 auto newPath = chanState.getProperty ("Path");
@@ -350,12 +358,9 @@ void PluginProcessor::setStateChangeCallbacks()
     // Global state
     mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
         auto globalSettings = oscBridgeState.getChildWithName ("GlobalSettings");
-        juce::Logger::writeToLog ("Global state changed: " + whatChanged.toString());
-
         if (whatChanged == juce::Identifier ("Port"))
         {
             auto newPort = globalSettings.getProperty ("Port");
-            juce::Logger::writeToLog ("Port changed to " + juce::String (newPort));
 
             mOscBridgeManager->stopListening();
             auto connectionResult = mOscBridgeManager->startListening (newPort);

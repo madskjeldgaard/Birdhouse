@@ -10,7 +10,8 @@ public:
     enum MsgType {
         MidiNote,
         MidiCC,
-        MidiBend
+        MidiBend,
+        NumMsgTypes
     };
 
     using OSCCallbackFunc = std::function<void (float, bool, const juce::OSCMessage&)>;

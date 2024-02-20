@@ -151,6 +151,8 @@ public:
             updateChannelSettings (whatChanged);
         };
 
+        outputMsgTypeComboBox.setColour (juce::ComboBox::arrowColourId, BirdHouse::Colours::fg);
+
         outputMsgTypeComboBox.addItem ("Note", OSCBridgeChannel::MidiNote + 1);
         outputMsgTypeComboBox.addItem ("CC", OSCBridgeChannel::MidiCC + 1);
         // outputMsgTypeComboBox.addItem ("Bend", OSCBridgeChannel::MidiBend + 1);
@@ -165,7 +167,9 @@ public:
         addAndMakeVisible (muteButton);
         muteButton.setToggleable (true);
         muteButton.setClickingTogglesState (true);
-        muteButton.setButtonText ("mute");
+        muteButton.setButtonText ("Mute");
+        muteButton.setColour (juce::TextButton::textColourOffId, BirdHouse::Colours::fg);
+        muteButton.setColour (juce::TextButton::textColourOnId, BirdHouse::Colours::bg);
         muteButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
         muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::red);
         // Set up toggle button callback
@@ -284,10 +288,10 @@ public:
 
         auto titleWidth = width / 2;
         titleLabel.setBounds (area.removeFromLeft (titleWidth));
-        activityIndicator.setBounds (area.removeFromLeft (width));
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
         inputMaxEditor.setBounds (area.removeFromLeft (width));
+        activityIndicator.setBounds (area.removeFromLeft (width));
         outputMidiChannelEditor.setBounds (area.removeFromLeft (width));
         outputNumEditor.setBounds (area.removeFromLeft (width));
         outputMsgTypeComboBox.setBounds (area.removeFromLeft (width));

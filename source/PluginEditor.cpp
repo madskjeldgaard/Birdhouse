@@ -29,6 +29,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     titleLabel.setFont (titleFont);
     titleLabel.setText ("BirdHouse. An OSC to MIDI bridge. v" VERSION ".", juce::dontSendNotification);
     titleLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
+    titleLabel.setJustificationType (juce::Justification::centred);
     titleLabel.setVisible (true);
     addAndMakeVisible (titleLabel);
 

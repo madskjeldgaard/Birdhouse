@@ -14,7 +14,7 @@ public:
         values.assign (maxValueCount, 0.0f);
         setBackgroundColour (BirdHouse::Colours::bgDark);
         setOutlineColour (BirdHouse::Colours::bgDark);
-        setValueColour (BirdHouse::Colours::magenta);
+        setValueColour (BirdHouse::Colours::blue);
 
         startTimerHz (30); // Start the timer with a frequency of 30 Hz
     }

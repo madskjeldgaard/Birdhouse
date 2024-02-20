@@ -6,10 +6,10 @@ class OSCBridgeChannelLabels : public juce::Component
 public:
     enum Labels {
         TitleLabel,
-        Activity,
         Path,
         InputMin,
         InputMax,
+        Activity,
         MidiChannel,
         MidiNum,
         OutputMsgType,
@@ -35,7 +35,7 @@ public:
         labels[TitleLabel]->setText ("", juce::dontSendNotification);
 
         // Activity
-        labels[Activity]->setText ("Activity", juce::dontSendNotification);
+        labels[Activity]->setText ("", juce::dontSendNotification);
 
         // Path
         labels[Path]->setText ("Path", juce::dontSendNotification);
@@ -56,7 +56,7 @@ public:
         labels[OutputMsgType]->setText ("MsgType", juce::dontSendNotification);
 
         // muted
-        labels[Muted]->setText ("Muted", juce::dontSendNotification);
+        labels[Muted]->setText ("", juce::dontSendNotification);
     }
 
     void setFont (const juce::Font& font)

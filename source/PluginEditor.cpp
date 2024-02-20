@@ -35,11 +35,16 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     // Get state
     auto state = processorRef.oscBridgeState;
 
+    if (!state.isValid())
+    {
+        juce::Logger::writeToLog ("State is invalid, using default");
+        state = processorRef.createEmptyOSCState();
+    }
+
     // Set up each channel
     auto numChannels = 8;
     for (auto i = 0; i < numChannels; ++i)
     {
-        auto channelID = juce::Identifier (juce::String (i));
         auto channelState = state.getChildWithName ("ChannelSettings").getChild (i);
 
         oscBridgeChannelEditors.push_back (std::make_unique<OSCBridgeChannelEditor>());
@@ -154,18 +159,17 @@ void PluginEditor::paint (juce::Graphics& g)
         connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
     }
 
-  // Update the activity indicators
+    // Update the activity indicators
 
-  auto chanIndex = 0u;
-  for(auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
-  {
-    auto processorChan = processorRef.getChannel(chanIndex);
+    auto chanIndex = 0u;
+    for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
+    {
+        auto processorChan = processorRef.getChannel (chanIndex);
 
-    oscBridgeChannelEditor->updateActivityForChan(*processorChan);
+        oscBridgeChannelEditor->updateActivityForChan (*processorChan);
 
-    chanIndex++;
-  }
-
+        chanIndex++;
+    }
 }
 
 void PluginEditor::resized()

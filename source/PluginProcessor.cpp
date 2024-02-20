@@ -267,7 +267,7 @@ juce::ValueTree PluginProcessor::createEmptyOSCState()
         channel.setProperty ("InputMin", 0.0f, nullptr);
         channel.setProperty ("InputMax", 1.0f, nullptr);
         channel.setProperty ("OutputMidiChannel", 1, nullptr);
-        channel.setProperty ("OutputMidiNum", i + 1, nullptr);
+        channel.setProperty ("OutputMidiNum", i + 48, nullptr);
         channel.setProperty ("MsgType", 0, nullptr);
         channel.setProperty ("Muted", false, nullptr);
 

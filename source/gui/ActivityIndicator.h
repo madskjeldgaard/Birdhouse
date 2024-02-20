@@ -7,13 +7,13 @@
 class ActivityIndicator : public juce::Component
 {
 public:
-    ActivityIndicator (size_t maxValues = 32)
+    ActivityIndicator (size_t maxValues = 64)
         : maxValueCount (maxValues)
     {
         values.assign (maxValueCount, 0.0f);
         setBackgroundColour (BirdHouse::Colours::bgDark);
         setOutlineColour (BirdHouse::Colours::bgDark);
-        setValueColour (BirdHouse::Colours::magenta);
+        setValueColour (BirdHouse::Colours::blue);
     }
 
     /**
@@ -32,6 +32,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
+        auto outlineSize = 1.0f;
         auto bounds = getLocalBounds().toFloat();
         auto widthPerValue = bounds.getWidth() / maxValueCount;
 
@@ -49,7 +50,7 @@ public:
 
         // Draw outline
         g.setColour (outlineColour);
-        g.drawRect (bounds, 1.0f); // 1.0f is the line thickness
+        g.drawRect (bounds, outlineSize); // 1.0f is the line thickness
     }
 
     // Setter methods for customizing appearance

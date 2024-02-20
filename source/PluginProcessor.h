@@ -3,6 +3,7 @@
 #include "bridge/LambdaStateListener.h"
 #include "bridge/OSCBridgeChannel.h"
 #include "bridge/OSCBridgeManager.h"
+#include "dsp/SimpleNoiseGenerator.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 static constexpr auto numBridgeChans = 8;
@@ -49,7 +50,8 @@ public:
 
     juce::ValueTree oscBridgeState;
 
-    // juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "PUBLIC", {} };
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "Parameters", createParameterLayout() };
 
     void updateListenerStates();
     void setStateChangeCallbacks();

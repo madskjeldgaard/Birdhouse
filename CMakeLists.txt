@@ -97,7 +97,14 @@ juce_add_plugin(
   TRUE
   # NOTE: VST3 and AUv3 MIDI effects need to be marked as synths
   IS_SYNTH
-  TRUE)
+  TRUE
+  # Categories
+  VST3_CATEGORIES
+  Tools
+  Fx
+  Modulation
+  AU_MAIN_TYPE
+  kAudioUnitType_MIDIProcessor)
 
 if(BUILD_CLAP)
 
@@ -195,3 +202,11 @@ include(Benchmarks)
 
 # Pass some config to GA (like our PRODUCT_NAME)
 include(GitHubENV)
+
+# we need these flags for notarization on MacOS
+option(MACOS_RELEASE "Set build flags for MacOS Release" OFF)
+if(MACOS_RELEASE)
+  message(STATUS "Setting MacOS release flags...")
+  set_target_properties(BirdHouse_Standalone
+                        PROPERTIES XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES)
+endif()

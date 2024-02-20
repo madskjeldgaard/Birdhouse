@@ -1,1 +1,4 @@
-- Set initial state at startup in standalone mode
+- Refactor todo:
+- Move away from gui's directly updating the model
+- All GUI should be Async
+- OSC callbacks should be sync / realtime

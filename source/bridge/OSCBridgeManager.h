@@ -26,7 +26,9 @@ public:
 
     bool startListening (int port)
     {
-        return mOscReceiver.connect (port);
+        auto result = mOscReceiver.connect (port);
+        juce::Logger::writeToLog ("OSC Bridge Manager: startListening:" + juce::String (static_cast<int> (result)));
+        return result;
     }
 
     void stopListening()

@@ -27,4 +27,18 @@ Run standalone (on MacOS):
 ./build/BirdHouse_artefacts/Standalone/BirdHouse.app/Contents/MacOS/BirdHouse
 ```
 
+## Usage
+
+
+### Setting up
+
+#### Basic Reaper usage
+- Create two tracks: One for Birdhouse, one for an instrument you want to control with birdhouse.
+- Add the Birdhouse plugin to the first track
+- Record enable the track (otherwise, the plugin will not receive any MIDI when you switch windows on your computer)
+- Add an instrument to the second track
+
+- Click and drag the "ROUTE" button to the second track to route the MIDI from Birdhouse to the instrument
+
+![reaper routing](manual/reaperrouting.png) 
 

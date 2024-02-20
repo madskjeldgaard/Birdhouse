@@ -26,26 +26,22 @@ PluginProcessor::PluginProcessor()
     mGlobalStateListener = std::make_shared<LambdaStateListener> (globalState);
 
     setStateChangeCallbacks();
+    updateListenerStates();
 
     // Register all channels with the OSCBridge manager
     mOscBridgeManager = std::make_shared<OSCBridgeManager>();
-    // auto chanNum = 0u;
+    auto chanNum = 0u;
     for (auto& chan : mOscBridgeChannels)
     {
         // Register the channel with the manager
         mOscBridgeManager->registerChannel (chan);
 
         // Add a custom callback to each channel
-        // mOscBridgeManager->addCallbackToChannel (chanNum++, [&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
-        //     juce::ignoreUnused (normalizedValue, valueAccepted, rawOSCMessage);
-        //     juce::Logger::writeToLog ("Normalized value: " + juce::String (normalizedValue) + " Value accepted: " + juce::String (static_cast<int> (valueAccepted)) + " Raw OSC message: " + rawOSCMessage.getAddressPattern().toString());
-
-        // });
+        mOscBridgeManager->addCallbackToChannel (chanNum++, [&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
+            juce::ignoreUnused (normalizedValue, valueAccepted, rawOSCMessage);
+            juce::Logger::writeToLog ("Normalized value: " + juce::String (normalizedValue) + " Value accepted: " + juce::String (static_cast<int> (valueAccepted)) + " Raw OSC message: " + rawOSCMessage.getAddressPattern().toString());
+        });
     }
-
-    auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
-    auto connectionResult = mOscBridgeManager->startListening (port);
-    oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
 PluginProcessor::~PluginProcessor()
@@ -148,7 +144,8 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     // Try connecting to default port
     auto defaultPort = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port", 8000);
-    mOscBridgeManager->startListening (defaultPort);
+    auto connectionResult = mOscBridgeManager->startListening (defaultPort);
+    oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
 void PluginProcessor::releaseResources()
@@ -193,19 +190,12 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     buffer.clear();
-
-    auto time = juce::Time::getMillisecondCounterHiRes();
-    juce::Logger::writeToLog ("Processing block at time: " + juce::String (time));
-    // Generate noise
-    // -100 db in ampltiude
-    // auto level = 0.001f;
-    // noiseGen.fillBufferWithNoise (buffer, level);
 }
 
 //==============================================================================
 bool PluginProcessor::hasEditor() const
 {
-    return false; // (change this to false if you choose to not supply an editor)
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
@@ -217,7 +207,6 @@ juce::AudioProcessorEditor* PluginProcessor::createEditor()
 //==============================================================================
 void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // TODO: Ensure state is valid before saving
     std::unique_ptr<juce::XmlElement> xml (oscBridgeState.createXml());
     copyXmlToBinary (*xml, destData);
 }
@@ -230,9 +219,12 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
     {
         if (xmlState->hasTagName (oscBridgeState.getType()))
         {
-            oscBridgeState = juce::ValueTree::fromXml (*xmlState);
-
-            updateListenerStates();
+            auto stateFromXML = juce::ValueTree::fromXml (*xmlState);
+            if (stateFromXML.isValid())
+            {
+                oscBridgeState = juce::ValueTree::fromXml (*xmlState);
+                updateListenerStates();
+            }
         }
     }
     else
@@ -358,22 +350,42 @@ void PluginProcessor::setStateChangeCallbacks()
     // Global state
     mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
         auto globalSettings = oscBridgeState.getChildWithName ("GlobalSettings");
-        if (whatChanged == juce::Identifier ("Port"))
+
+        if (globalSettings.isValid())
         {
-            auto newPort = globalSettings.getProperty ("Port");
+            if (whatChanged == juce::Identifier ("Port"))
+            {
+                auto newPort = globalSettings.getProperty ("Port", 8000);
+                juce::Logger::writeToLog ("Changing port");
 
-            mOscBridgeManager->stopListening();
-            auto connectionResult = mOscBridgeManager->startListening (newPort);
+                mOscBridgeManager->stopListening();
+                auto connectionResult = mOscBridgeManager->startListening (newPort);
 
-            globalSettings.setProperty ("ConnectionStatus", connectionResult, nullptr);
+                globalSettings.setProperty ("ConnectionStatus", connectionResult, nullptr);
+            }
+
+            if (whatChanged == juce::Identifier ("ConnectionStatus"))
+            {
+                auto newStatus = globalSettings.getProperty ("ConnectionStatus", false);
+                juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
+            }
         }
-
-        if (whatChanged == juce::Identifier ("ConnectionStatus"))
+        else
         {
-            auto newStatus = globalSettings.getProperty ("ConnectionStatus");
-            juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
+            juce::Logger::writeToLog ("Global settings not valid");
         }
     });
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+{
+    // Add port parameter
+    juce::AudioProcessorValueTreeState::ParameterLayout portLayout;
+
+    // FIXME: This doesn't do anything at the moment
+    auto maxPort = 65535;
+    portLayout.add (std::make_unique<juce::AudioParameterInt> ("Port", "Port", 0, maxPort, 8000));
+    return portLayout;
 }
 
 //==============================================================================

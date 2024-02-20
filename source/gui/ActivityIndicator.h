@@ -4,16 +4,25 @@
 #include <deque>
 #include <juce_gui_basics/juce_gui_basics.h>
 
-class ActivityIndicator : public juce::Component
+template <size_t MaxValues = 64>
+class ActivityIndicator : public juce::Component, juce::Timer
 {
 public:
-    ActivityIndicator (size_t maxValues = 64)
-        : maxValueCount (maxValues)
+    ActivityIndicator()
+        : maxValueCount (MaxValues)
     {
         values.assign (maxValueCount, 0.0f);
         setBackgroundColour (BirdHouse::Colours::bgDark);
         setOutlineColour (BirdHouse::Colours::bgDark);
-        setValueColour (BirdHouse::Colours::blue);
+        setValueColour (BirdHouse::Colours::magenta);
+
+        startTimerHz (30); // Start the timer with a frequency of 30 Hz
+    }
+
+    // Make sure it alwyays repaints, even when the window is out of focus
+    void timerCallback() override
+    {
+        repaint();
     }
 
     /**
@@ -43,8 +52,13 @@ public:
         for (size_t i = 0; i < values.size(); ++i)
         {
             float valueHeight = values[i] * bounds.getHeight();
-            juce::Rectangle<float> valueRect (i * widthPerValue, bounds.getBottom() - valueHeight, widthPerValue, valueHeight);
+            auto valueX = i * widthPerValue;
+            auto valueY = bounds.getBottom() - valueHeight;
+            juce::Rectangle<float> valueRect (valueX, valueY, widthPerValue, valueHeight);
+
+            // juce::ColourGradient colorGradient (BirdHouse::Colours::magenta, valueRect.getX(), valueRect.getCentreY(), BirdHouse::Colours::yellow, valueRect.getRight(), valueRect.getCentreY(), false);
             g.setColour (valueColour);
+            // g.setGradientFill (colorGradient);
             g.fillRect (valueRect);
         }
 
@@ -59,7 +73,7 @@ public:
     void setValueColour (juce::Colour colour) { valueColour = colour; }
 
 private:
-    std::deque<float> values; // Fixed-size deque to store the last N values
+    std::deque<float> values { MaxValues, 0.f }; // Fixed-size deque to store the last N values
     size_t maxValueCount; // The maximum number of values to display
 
     // Appearance

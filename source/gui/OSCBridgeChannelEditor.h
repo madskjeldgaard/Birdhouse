@@ -180,6 +180,10 @@ public:
 
         // ActivityIndicator
         addAndMakeVisible (activityIndicator);
+
+        addAndMakeVisible (titleLabel);
+        titleLabel.setColour (juce::Label::ColourIds::textColourId, BirdHouse::Colours::blue);
+        titleLabel.setJustificationType (juce::Justification::centred);
     }
 
     void setColour (juce::Colour colour)
@@ -189,6 +193,7 @@ public:
         inputMaxEditor.setColour (colourID, colour);
         outputMidiChannelEditor.setColour (colourID, colour);
         outputNumEditor.setColour (colourID, colour);
+        // titleLabel.setColour (colourID, colour);
         // muteButton.setColour (juce::TextButton::buttonColourId, colour);
 
         auto comboBoxID = juce::ComboBox::textColourId;
@@ -202,6 +207,7 @@ public:
         inputMaxEditor.setFont (font);
         outputMidiChannelEditor.setFont (font);
         outputNumEditor.setFont (font);
+        titleLabel.setFont (font.withTypefaceStyle ("Bold")); // Bold
         // muteButton.setToggleable (font);
     }
 
@@ -213,6 +219,11 @@ public:
         outputMidiChannelEditor.setJustification (justification);
         outputNumEditor.setJustification (justification);
         // outputMsgTypeComboBox.setTextJustification (justification);
+    }
+
+    void setTitle (const juce::String& title)
+    {
+        titleLabel.setText (title, juce::dontSendNotification);
     }
 
     void setPath (const juce::String& path)
@@ -271,6 +282,8 @@ public:
         auto area = getLocalBounds();
         auto width = area.getWidth() / numElements;
 
+        auto titleWidth = width / 2;
+        titleLabel.setBounds (area.removeFromLeft (titleWidth));
         activityIndicator.setBounds (area.removeFromLeft (width));
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
@@ -307,6 +320,7 @@ public:
 
 private:
     // GUI Components
+    juce::Label titleLabel;
     juce::TextEditor pathEditor;
     juce::TextEditor inputMinEditor;
     juce::TextEditor inputMaxEditor;
@@ -315,7 +329,7 @@ private:
     juce::ComboBox outputMsgTypeComboBox;
     juce::TextButton muteButton { "Mute" };
 
-    ActivityIndicator activityIndicator;
+    ActivityIndicator<64> activityIndicator;
 
     juce::ValueTree oscBridgeState;
 

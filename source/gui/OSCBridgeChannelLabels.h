@@ -5,6 +5,7 @@ class OSCBridgeChannelLabels : public juce::Component
 {
 public:
     enum Labels {
+        TitleLabel,
         Activity,
         Path,
         InputMin,
@@ -29,6 +30,9 @@ public:
         {
             addAndMakeVisible (label.get());
         }
+
+        // Title / Chan number
+        labels[TitleLabel]->setText ("", juce::dontSendNotification);
 
         // Activity
         labels[Activity]->setText ("Activity", juce::dontSendNotification);
@@ -77,9 +81,18 @@ public:
         auto area = getLocalBounds();
         auto width = area.getWidth() / NumLabels;
 
+        auto labelNum = 0;
         for (auto& label : labels)
         {
-            label->setBounds (area.removeFromLeft (width));
+            if (labelNum == TitleLabel)
+            {
+                label->setBounds (area.removeFromLeft (width / 2));
+            }
+            else
+            {
+                label->setBounds (area.removeFromLeft (width));
+            }
+            labelNum++;
         }
     }
 

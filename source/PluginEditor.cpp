@@ -59,6 +59,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
         {
             juce::Logger::writeToLog ("Channel state is invalid");
         }
+        oscBridgeChannelEditors.back()->setTitle (juce::String (i + 1));
 
         addAndMakeVisible (*oscBridgeChannelEditors.back());
     }
@@ -116,6 +117,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     connectionStatusTitleLabel.setFont (labelFont);
     connectionStatusTitleLabel.setColour (juce::Label::textColourId, labelColour);
     connectionStatusTitleLabel.setText ("Status:", juce::dontSendNotification);
+    connectionStatusTitleLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (connectionStatusTitleLabel);
 
     connectionStatusLabel.setFont (labelFont);

@@ -67,7 +67,6 @@ public:
 
     void setOutputMidiNum (auto newOutputNum)
     {
-        juce::Logger::writeToLog ("Setting output num" + juce::String (newOutputNum));
         mOutMidiNum = newOutputNum;
     }
 
@@ -108,11 +107,9 @@ public:
     // Add MIDI message to the channel's list of buffers
     void addMidiMessageToBuffer (const juce::MidiMessage& message, int timeStamp = 0)
     {
-        juce::Logger::writeToLog ("Adding MIDI message to buffer");
         mInternalBuffer.addEvent (message, timeStamp);
 
         const auto bufferSize = mInternalBuffer.getNumEvents();
-        juce::Logger::writeToLog ("Buffer size: " + juce::String (bufferSize));
     }
 
     // Called at the start of each processBlock to move messages to the processBlock's midi buffer
@@ -120,7 +117,6 @@ public:
     {
         if (mInternalBuffer.getNumEvents() > 0)
         {
-            juce::Logger::writeToLog ("Transfering messages to processBlockBuffer");
             processBlockBuffer.addEvents (mInternalBuffer, 0, -1, 0);
             mInternalBuffer.clear(); // Flush the channel's MIDI messages after transfer
         }
@@ -141,7 +137,6 @@ public:
         auto messageAccepted = message.size() == 1 && (message[0].isFloat32() || message[0].isInt32());
         auto normalizedValue = 0.f;
 
-        juce::Logger::writeToLog ("received message");
         mLastValueTime = juce::Time::currentTimeMillis();
 
         // Retrieve the value from the message
@@ -174,7 +169,6 @@ public:
         if (!muted)
         {
             auto midiMessage = convertToMidiMessage (normalizedValue);
-            juce::Logger::writeToLog ("MIDI message: " + midiMessage.getDescription());
             addMidiMessageToBuffer (midiMessage);
         }
     }

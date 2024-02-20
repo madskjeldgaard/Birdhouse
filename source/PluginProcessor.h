@@ -47,9 +47,9 @@ public:
     // Create state
     juce::ValueTree createEmptyOSCState();
 
-    juce::ValueTree oscBridgeState { createEmptyOSCState() };
+    juce::ValueTree oscBridgeState;
 
-    juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "PUBLIC", {} };
+    // juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "PUBLIC", {} };
 
     void updateListenerStates();
     void setStateChangeCallbacks();

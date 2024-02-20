@@ -222,7 +222,6 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
         if (xmlState->hasTagName (oscBridgeState.getType()))
         {
             oscBridgeState = juce::ValueTree::fromXml (*xmlState);
-            mPublicState.replaceState (oscBridgeState);
 
             updateListenerStates();
         }

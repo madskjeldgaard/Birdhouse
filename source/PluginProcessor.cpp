@@ -183,13 +183,18 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    buffer.clear();
+
+    // Create temporary buffer for MIDI messages to allow double-buffering
+    // This ensures that the MIDI messages are not modified while being processed
+    juce::MidiBuffer tmpMidi;
 
     for (auto& chan : mOscBridgeChannels)
     {
-        chan->appendMessagesTo (midiMessages);
+        chan->appendMessagesTo (tmpMidi);
     }
 
-    buffer.clear();
+    midiMessages.swapWith (tmpMidi);
 }
 
 //==============================================================================

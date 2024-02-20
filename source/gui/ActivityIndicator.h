@@ -12,7 +12,7 @@ public:
     {
         values.assign (maxValueCount, 0.0f);
         setBackgroundColour (BirdHouse::Colours::bgDark);
-        setOutlineColour (BirdHouse::Colours::fg);
+        setOutlineColour (BirdHouse::Colours::bgDark);
         setValueColour (BirdHouse::Colours::magenta);
     }
 

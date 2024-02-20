@@ -120,9 +120,31 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 
-    auto port = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port");
-    auto connectionResult = mOscBridgeManager->startListening (port);
-    oscBridgeState.getChildWithName ("GlobalSettings").setProperty ("ConnectionStatus", connectionResult, nullptr);
+    juce::Logger::writeToLog ("Preparing to play");
+
+    // Set default values for each channel
+    auto index = 0;
+    for (auto& chan : mOscBridgeChannels)
+    {
+        auto inMin = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("InputMin", 0.0f);
+        auto inMax = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("InputMax", 1.0f);
+        auto outChan = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("OutputMidiChannel", index + 1);
+        auto outNum = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("OutputMidiNum", 48 + index);
+        auto msgType = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("MsgType", 0);
+        auto muted = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("Muted", false);
+        chan->setInputMin (inMin);
+        chan->setInputMax (inMax);
+        chan->setOutputMidiChannel (outChan);
+        chan->setOutputMidiNum (outNum);
+        chan->setOutputType (static_cast<OSCBridgeChannel::MsgType>(static_cast<int>(msgType)));
+        chan->setMuted (muted);
+
+        index++;
+    }
+
+    // Try connecting to default port
+    auto defaultPort = oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("Port", 8000);
+    mOscBridgeManager->startListening (defaultPort);
 }
 
 void PluginProcessor::releaseResources()

@@ -42,8 +42,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     }
 
     // Set up each channel
-    auto numChannels = 8;
-    for (auto i = 0; i < numChannels; ++i)
+    for (auto i = 0; i < numBridgeChans; i++)
     {
         auto channelState = state.getChildWithName ("ChannelSettings").getChild (i);
 

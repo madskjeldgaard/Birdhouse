@@ -382,9 +382,61 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     // Add port parameter
     juce::AudioProcessorValueTreeState::ParameterLayout portLayout;
 
-    // FIXME: This doesn't do anything at the moment
     auto maxPort = 65535;
     portLayout.add (std::make_unique<juce::AudioParameterInt> ("Port", "Port", 0, maxPort, 8000));
+
+    for (auto chanNum = 1; chanNum <= numBridgeChans; chanNum++)
+    {
+        // Add InMin parameter for this channel
+        auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
+        auto inMinParameterName = juce::String ("InMin") + juce::String (chanNum);
+        auto inMinMinValue = 0.f;
+        auto inMinMaxValue = 20000.f;
+        auto inMinDefaultValue = 0.f;
+        portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMinParamID, inMinParameterName, inMinMinValue, inMinMaxValue, inMinDefaultValue));
+
+        // Add InMax parameter
+        auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
+        auto inMaxParameterName = juce::String ("InMax") + juce::String (chanNum);
+        auto inMaxMinValue = 0.f;
+        auto inMaxMaxValue = 20000.f;
+        auto inMaxDefaultValue = 1.f;
+        portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMaxParamID, inMaxParameterName, inMaxMinValue, inMaxMaxValue, inMaxDefaultValue));
+
+        // Add MIDI Chan parameter
+        auto midiChanParamID = juce::String ("MidiChan") + juce::String (chanNum);
+        auto midiChanParameterName = juce::String ("MidiChan") + juce::String (chanNum);
+        auto midiChanMinValue = 1;
+        auto midiChanMaxValue = 16;
+        auto midiChanDefaultValue = 1;
+        portLayout.add (std::make_unique<juce::AudioParameterInt> (midiChanParamID, midiChanParameterName, midiChanMinValue, midiChanMaxValue, midiChanDefaultValue));
+
+        // Add MIDI Num parameter
+        auto midiNumParamID = juce::String ("MidiNum") + juce::String (chanNum);
+        auto midiNumParameterName = juce::String ("MidiNum") + juce::String (chanNum);
+        auto midiNumMinValue = 0;
+        auto midiNumMaxValue = 127;
+        auto midiNumDefaultValue = 48 + chanNum - 1;
+        portLayout.add (std::make_unique<juce::AudioParameterInt> (midiNumParamID, midiNumParameterName, midiNumMinValue, midiNumMaxValue, midiNumDefaultValue));
+
+        // Add MsgType parameter
+        auto msgTypeParamID = juce::String ("MsgType") + juce::String (chanNum);
+        auto msgTypeParameterName = juce::String ("MsgType") + juce::String (chanNum);
+        auto msgTypeMinValue = 0;
+        auto msgTypeMaxValue = OSCBridgeChannel::MsgType::NumMsgTypes - 1;
+        ;
+        auto msgTypeDefaultValue = 0;
+        portLayout.add (std::make_unique<juce::AudioParameterInt> (msgTypeParamID, msgTypeParameterName, msgTypeMinValue, msgTypeMaxValue, msgTypeDefaultValue));
+
+        // Add Muted parameter
+        auto mutedParamID = juce::String ("Muted") + juce::String (chanNum);
+        auto mutedParameterName = juce::String ("Muted") + juce::String (chanNum);
+        auto mutedMinValue = 0;
+        auto mutedMaxValue = 1;
+        auto mutedDefaultValue = 0;
+        portLayout.add (std::make_unique<juce::AudioParameterInt> (mutedParamID, mutedParameterName, mutedMinValue, mutedMaxValue, mutedDefaultValue));
+    }
+
     return portLayout;
 }
 

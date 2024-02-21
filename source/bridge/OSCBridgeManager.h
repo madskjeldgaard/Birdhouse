@@ -5,66 +5,70 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_osc/juce_osc.h>
-
-/**
+namespace birdhouse
+{
+    /**
  * @class OSCBridgeManager
  * @brief The OSCBridgeManager class is responsible for managing the OSC bridge, it registers a callback for OSC and dispatches to all channels that are registered with it.
  *
  */
-class OSCBridgeManager : private juce::OSCReceiver, private juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
-{
-public:
-    OSCBridgeManager()
+    class OSCBridgeManager : private juce::OSCReceiver, private juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
     {
-        mOscReceiver.addListener (this);
-    }
-
-    ~OSCBridgeManager() override
-    {
-        stopListening();
-    }
-
-    bool startListening (int port)
-    {
-        auto result = mOscReceiver.connect (port);
-        juce::Logger::writeToLog ("OSC Bridge Manager: startListening:" + juce::String (static_cast<int> (result)));
-        return result;
-    }
-
-    void stopListening()
-    {
-        mOscReceiver.disconnect();
-    }
-
-    void registerChannel (std::shared_ptr<OSCBridgeChannel> channel)
-    {
-        if (channel)
+    public:
+        OSCBridgeManager()
         {
-            mChannels.emplace_back (channel);
+            mOscReceiver.addListener (this);
         }
-    }
 
-    void addCallbackToChannel (std::size_t chanNum, auto newCallback)
-    {
-        if (chanNum < mChannels.size())
+        ~OSCBridgeManager() override
         {
-            mChannels[chanNum]->addCallback (newCallback);
+            stopListening();
         }
-    }
 
-protected:
-    void oscMessageReceived (const juce::OSCMessage& message) override
-    {
-        for (auto& channel : mChannels)
+        bool startListening (int port)
         {
-            if (channel->matchesOSCAddress (message.getAddressPattern().toString()))
+            auto result = mOscReceiver.connect (port);
+            juce::Logger::writeToLog ("OSC Bridge Manager: startListening:" + juce::String (static_cast<int> (result)));
+            return result;
+        }
+
+        void stopListening()
+        {
+            mOscReceiver.disconnect();
+        }
+
+        void registerChannel (std::shared_ptr<OSCBridgeChannel> channel)
+        {
+            if (channel)
             {
-                channel->handleOSCMessage (message);
+                mChannels.emplace_back (channel);
             }
         }
-    }
 
-private:
-    juce::OSCReceiver mOscReceiver;
-    std::vector<std::shared_ptr<OSCBridgeChannel>> mChannels;
-};
+        auto getChannels() const -> const std::vector<std::shared_ptr<OSCBridgeChannel>>&
+        {
+            return mChannels;
+        }
+
+        auto getChannel (auto num) -> std::shared_ptr<OSCBridgeChannel>&
+        {
+            return mChannels[num];
+        }
+
+    protected:
+        void oscMessageReceived (const juce::OSCMessage& message) override
+        {
+            for (auto& channel : mChannels)
+            {
+                if (channel->matchesPath (message.getAddressPattern().toString()))
+                {
+                    channel->handleOSCMessage (message);
+                }
+            }
+        }
+
+    private:
+        juce::OSCReceiver mOscReceiver;
+        std::vector<std::shared_ptr<OSCBridgeChannel>> mChannels;
+    };
+}

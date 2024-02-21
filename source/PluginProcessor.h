@@ -51,16 +51,17 @@ public:
     juce::ValueTree oscBridgeState;
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState mPublicState { *this, nullptr, "Parameters", createParameterLayout() };
+    juce::AudioProcessorValueTreeState parameters { *this, nullptr, "Parameters", createParameterLayout() };
 
     void updateListenerStates();
     void setStateChangeCallbacks();
 
     auto& getChannel (auto index) { return mOscBridgeChannels[index]; }
+    void updateChannelsFromParams();
 
 private:
-    std::vector<std::shared_ptr<OSCBridgeChannel>> mOscBridgeChannels;
-    std::shared_ptr<OSCBridgeManager> mOscBridgeManager;
+    std::vector<std::shared_ptr<birdhouse::OSCBridgeChannel>> mOscBridgeChannels;
+    std::shared_ptr<birdhouse::OSCBridgeManager> mOscBridgeManager;
 
     std::vector<std::shared_ptr<LambdaStateListener>> mChanListeners {};
     std::shared_ptr<LambdaStateListener> mGlobalStateListener;

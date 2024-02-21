@@ -26,6 +26,8 @@ namespace BirdHouse
     public:
         BirdHouseLookAndFeel()
         {
+            auto outline = Colours::fg.withAlpha (0.5f);
+
             // Set default colours for components
             setColour (juce::Slider::backgroundColourId, Colours::bgDark);
             setColour (juce::Slider::thumbColourId, Colours::blue);
@@ -39,7 +41,7 @@ namespace BirdHouse
 
             setColour (juce::ComboBox::backgroundColourId, Colours::bg);
             setColour (juce::ComboBox::textColourId, Colours::fg);
-            setColour (juce::ComboBox::outlineColourId, Colours::fg.withAlpha (0.5f));
+            setColour (juce::ComboBox::outlineColourId, outline);
             setColour (juce::PopupMenu::backgroundColourId, Colours::bgDark);
             setColour (juce::PopupMenu::textColourId, Colours::blue);
             setColour (juce::ResizableWindow::backgroundColourId, Colours::bg);
@@ -47,7 +49,7 @@ namespace BirdHouse
             setColour (juce::TextEditor::textColourId, Colours::fg);
             setColour (juce::TextEditor::highlightColourId, Colours::blue.withAlpha (0.5f));
             setColour (juce::TextEditor::highlightedTextColourId, Colours::magenta);
-            setColour (juce::TextEditor::outlineColourId, Colours::fg.withAlpha (0.5f));
+            setColour (juce::TextEditor::outlineColourId, outline);
             setColour (juce::TextEditor::focusedOutlineColourId, Colours::magenta);
 
             // Additional component colours can be set here following the same pattern

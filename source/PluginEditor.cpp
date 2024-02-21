@@ -168,7 +168,7 @@ void PluginEditor::paint (juce::Graphics& g)
     {
         auto processorChan = processorRef.getChannel (chanIndex);
 
-        oscBridgeChannelEditor->updateActivityForChan (*processorChan);
+        oscBridgeChannelEditor->updateActivityForChan (processorChan.get()->state());
 
         chanIndex++;
     }

@@ -19,7 +19,18 @@ PluginProcessor::PluginProcessor()
         mChanListeners.emplace_back (std::make_shared<LambdaStateListener> (chanState));
 
         // Set up the channel
-        mOscBridgeChannels.push_back (std::make_shared<OSCBridgeChannel> (chanState));
+        auto path = chanState.getProperty ("Path", "/" + juce::String (i) + "/value");
+        auto inMin = chanState.getProperty ("InputMin", 0.0f);
+        auto inMax = chanState.getProperty ("InputMax", 1.0f);
+        auto outChan = chanState.getProperty ("OutputMidiChannel", i + 1);
+        auto outNum = chanState.getProperty ("OutputMidiNum", 48 + i);
+        auto msgType = static_cast<birdhouse::MsgType> (static_cast<int> (chanState.getProperty ("MsgType", 0)));
+        auto muted = chanState.getProperty ("Muted", false);
+        mOscBridgeChannels.push_back (std::make_shared<birdhouse::OSCBridgeChannel> (
+            path, inMin, inMax, outChan, outNum, msgType));
+
+        // Set mute
+        mOscBridgeChannels[static_cast<std::size_t>(i)]->state().setMuted (muted);
     }
 
     auto globalState = oscBridgeState.getChildWithName ("GlobalSettings");
@@ -29,15 +40,14 @@ PluginProcessor::PluginProcessor()
     updateListenerStates();
 
     // Register all channels with the OSCBridge manager
-    mOscBridgeManager = std::make_shared<OSCBridgeManager>();
-    auto chanNum = 0u;
+    mOscBridgeManager = std::make_shared<birdhouse::OSCBridgeManager>();
     for (auto& chan : mOscBridgeChannels)
     {
         // Register the channel with the manager
         mOscBridgeManager->registerChannel (chan);
 
         // Add a custom callback to each channel
-        mOscBridgeManager->addCallbackToChannel (chanNum++, [&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
+        chan->addOSCCallback ([&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
             juce::ignoreUnused (normalizedValue, valueAccepted, rawOSCMessage);
             juce::Logger::writeToLog ("Normalized value: " + juce::String (normalizedValue) + " Value accepted: " + juce::String (static_cast<int> (valueAccepted)) + " Raw OSC message: " + rawOSCMessage.getAddressPattern().toString());
         });
@@ -132,12 +142,12 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
         auto outNum = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("OutputMidiNum", 48 + index);
         auto msgType = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("MsgType", 0);
         auto muted = oscBridgeState.getChildWithName ("ChannelSettings").getChild (index).getProperty ("Muted", false);
-        chan->setInputMin (inMin);
-        chan->setInputMax (inMax);
-        chan->setOutputMidiChannel (outChan);
-        chan->setOutputMidiNum (outNum);
-        chan->setOutputType (static_cast<OSCBridgeChannel::MsgType> (static_cast<int> (msgType)));
-        chan->setMuted (muted);
+        chan->state().setInputMin (inMin);
+        chan->state().setInputMax (inMax);
+        chan->state().setOutputMidiChannel (outChan);
+        chan->state().setOutputMidiNum (outNum);
+        chan->state().setOutputType (static_cast<birdhouse::MsgType> (static_cast<int> (msgType)));
+        chan->state().setMuted (muted);
 
         index++;
     }
@@ -186,7 +196,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     buffer.clear();
 
     // Create temporary buffer for MIDI messages to allow double-buffering
-    // This ensures that the MIDI messages are not modified while being processed
     juce::MidiBuffer tmpMidi;
 
     for (auto& chan : mOscBridgeChannels)
@@ -309,43 +318,43 @@ void PluginProcessor::setStateChangeCallbacks()
             if (whatChanged == juce::Identifier ("Path"))
             {
                 auto newPath = chanState.getProperty ("Path");
-                mOscBridgeChannels[i]->setPath (newPath);
+                mOscBridgeChannels[i]->state().setPath (newPath);
             }
 
             if (whatChanged == juce::Identifier ("InputMin"))
             {
                 auto newMin = chanState.getProperty ("InputMin");
-                mOscBridgeChannels[i]->setInputMin (newMin);
+                mOscBridgeChannels[i]->state().setInputMin (newMin);
             }
 
             if (whatChanged == juce::Identifier ("InputMax"))
             {
                 auto newMax = chanState.getProperty ("InputMax");
-                mOscBridgeChannels[i]->setInputMax (newMax);
+                mOscBridgeChannels[i]->state().setInputMax (newMax);
             }
 
             if (whatChanged == juce::Identifier ("OutputMidiChannel"))
             {
                 auto newChannel = chanState.getProperty ("OutputMidiChannel");
-                mOscBridgeChannels[i]->setOutputMidiChannel (newChannel);
+                mOscBridgeChannels[i]->state().setOutputMidiChannel (newChannel);
             }
 
             if (whatChanged == juce::Identifier ("OutputMidiNum"))
             {
                 auto newNum = chanState.getProperty ("OutputMidiNum");
-                mOscBridgeChannels[i]->setOutputMidiNum (static_cast<int> (newNum));
+                mOscBridgeChannels[i]->state().setOutputMidiNum (static_cast<int> (newNum));
             }
 
             if (whatChanged == juce::Identifier ("MsgType"))
             {
                 auto newType = chanState.getProperty ("MsgType");
-                mOscBridgeChannels[i]->setOutputType (static_cast<OSCBridgeChannel::MsgType> (static_cast<int> (newType)));
+                mOscBridgeChannels[i]->state().setOutputType (static_cast<birdhouse::MsgType> (static_cast<int> (newType)));
             }
 
             if (whatChanged == juce::Identifier ("Muted"))
             {
                 auto newMuted = chanState.getProperty ("Muted");
-                mOscBridgeChannels[i]->setMuted (newMuted);
+                mOscBridgeChannels[i]->state().setMuted (newMuted);
             }
         });
 
@@ -428,7 +437,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
         auto msgTypeParamID = juce::String ("MsgType") + juce::String (chanNum);
         auto msgTypeParameterName = juce::String ("MsgType") + juce::String (chanNum);
         auto msgTypeMinValue = 0;
-        auto msgTypeMaxValue = OSCBridgeChannel::MsgType::NumMsgTypes - 1;
+        auto msgTypeMaxValue = birdhouse::MsgType::NumMsgTypes - 1;
         ;
         auto msgTypeDefaultValue = 0;
         portLayout.add (std::make_unique<juce::AudioParameterInt> (msgTypeParamID, msgTypeParameterName, msgTypeMinValue, msgTypeMaxValue, msgTypeDefaultValue));
@@ -443,6 +452,35 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     }
 
     return portLayout;
+}
+
+// Get all parameters from the apvts and update the channels accordingly
+void PluginProcessor::updateChannelsFromParams()
+{
+    for (auto chanNum = 1; chanNum <= numBridgeChans; chanNum++)
+    {
+        const auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
+        const auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
+        const auto midiChanParamID = juce::String ("MidiChan") + juce::String (chanNum);
+        const auto midiNumParamID = juce::String ("MidiNum") + juce::String (chanNum);
+        const auto msgTypeParamID = juce::String ("MsgType") + juce::String (chanNum);
+        const auto mutedParamID = juce::String ("Muted") + juce::String (chanNum);
+
+        const auto inMin = parameters.getParameter (inMinParamID)->getValue();
+        const auto inMax = parameters.getParameter (inMaxParamID)->getValue();
+        const auto midiChan = parameters.getParameter (midiChanParamID)->getValue();
+        const auto midiNum = parameters.getParameter (midiNumParamID)->getValue();
+        const auto msgType = parameters.getParameter (msgTypeParamID)->getValue();
+        const auto muted = parameters.getParameter (mutedParamID)->getValue();
+
+        const auto chan = mOscBridgeChannels[static_cast<std::size_t> (chanNum - 1)];
+        chan->state().setInputMin (inMin);
+        chan->state().setInputMax (inMax);
+        chan->state().setOutputMidiChannel (static_cast<int> (midiChan));
+        chan->state().setOutputMidiNum (static_cast<int> (midiNum));
+        chan->state().setOutputType (static_cast<birdhouse::MsgType> (static_cast<int> (msgType)));
+        chan->state().setMuted (static_cast<bool> (muted));
+    }
 }
 
 //==============================================================================

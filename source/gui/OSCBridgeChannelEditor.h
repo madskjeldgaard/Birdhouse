@@ -153,8 +153,8 @@ public:
 
         outputMsgTypeComboBox.setColour (juce::ComboBox::arrowColourId, BirdHouse::Colours::fg);
 
-        outputMsgTypeComboBox.addItem ("Note", OSCBridgeChannel::MidiNote + 1);
-        outputMsgTypeComboBox.addItem ("CC", OSCBridgeChannel::MidiCC + 1);
+        outputMsgTypeComboBox.addItem ("Note", birdhouse::MsgType::MidiNote + 1);
+        outputMsgTypeComboBox.addItem ("CC", birdhouse::MsgType::MidiCC + 1);
         // outputMsgTypeComboBox.addItem ("Bend", OSCBridgeChannel::MidiBend + 1);
         addAndMakeVisible (outputMsgTypeComboBox);
         outputMsgTypeComboBox.onChange = [&] {
@@ -162,7 +162,7 @@ public:
             updateChannelSettings (whatChanged);
         };
 
-        outputMsgTypeComboBox.setSelectedId (OSCBridgeChannel::MidiNote + 1);
+        outputMsgTypeComboBox.setSelectedId (birdhouse::MsgType::MidiNote + 1);
 
         addAndMakeVisible (muteButton);
         muteButton.setToggleable (true);
@@ -190,7 +190,7 @@ public:
         titleLabel.setJustificationType (juce::Justification::centred);
     }
 
-    void setColour (juce::Colour colour)
+    void setTextColour (juce::Colour colour)
     {
         const auto colourID = juce::Label::textColourId;
         inputMinEditor.setColour (colourID, colour);
@@ -203,6 +203,7 @@ public:
         auto comboBoxID = juce::ComboBox::textColourId;
         outputMsgTypeComboBox.setColour (comboBoxID, colour);
     }
+
 
     void setFont (const juce::Font& font)
     {
@@ -315,7 +316,7 @@ public:
         outputMidiChannelEditor.setText (juce::String (newState.getProperty ("OutputMidiChannel", 1)));
         outputNumEditor.setText (juce::String (newState.getProperty ("OutputMidiNum", 1)));
 
-        auto msgType = newState.getProperty ("MsgType", OSCBridgeChannel::MidiNote);
+        auto msgType = newState.getProperty ("MsgType", birdhouse::MsgType::MidiNote);
         outputMsgTypeComboBox.setSelectedItemIndex (static_cast<int> (msgType));
         muteButton.setToggleState (newState.getProperty ("Muted", false), juce::dontSendNotification);
     }

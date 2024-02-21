@@ -32,7 +32,7 @@ set(BUNDLE_ID "com.madskjeldgaard.birdhouse")
 
 # Change me! Set the plugin formats you want built Valid choices: AAX Unity VST
 # VST3 AU AUv3 Standalone
-set(FORMATS Standalone AU VST3 AUv3)
+set(FORMATS Standalone VST3)
 
 # Option to build CLAP
 option(BUILD_CLAP "Build CLAP version of project" ON)

@@ -60,6 +60,8 @@ namespace birdhouse
         }
         void handleOSCMessage (const juce::OSCMessage& message)
         {
+            juce::Logger::writeToLog ("Received OSC message: " + message.getAddressPattern().toString() + " with " + juce::String (message.size()) + " arguments");
+
             auto messageAccepted = message.size() == 1 && (message[0].isFloat32() || message[0].isInt32());
             auto rawValue = 0.f;
 
@@ -105,6 +107,7 @@ namespace birdhouse
         // This is called by the OSC part of the plugin
         void addMidiMessage (const juce::MidiMessage& message, int timeStamp = 0)
         {
+            juce::Logger::writeToLog ("Adding MIDI message to buffer");
             const juce::ScopedLock lock (mCriticalSection); // Lock while reading/modifying
             mInternalBuffer.addEvent (message, timeStamp);
         }
@@ -136,29 +139,59 @@ namespace birdhouse
         // Constructor
     public:
         OSCBridgeChannelState (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
-            : mPath (path), mInputMin (fromMin), mInputMax (fromMax), mOutputMidiChan (outputMidiChannel), mOutMidiNum (outputNum), mMsgType (outputType)
+            : mInputMin (fromMin), mInputMax (fromMax), mOutputMidiChan (outputMidiChannel), mOutMidiNum (outputNum), mMsgType (outputType)
         {
+            setPath (path);
         }
 
         // Setters and getters
-        void setPath (const juce::String& newPath) { mPath = newPath; }
-        void setInputMin (auto newFromMin) { mInputMin = newFromMin; }
+        void setPath (const juce::String& newPath)
+        {
+            DBG ("Changing path from " + mPath + " to " + newPath);
+            mPath = newPath;
+        }
+        void setInputMin (auto newFromMin)
+        {
+            DBG ("Changing input min from " + juce::String (mInputMin.load()) + " to " + juce::String (newFromMin) + " for path " + mPath);
+            mInputMin = newFromMin;
+        }
 
-        void setInputMax (auto newFromMax) { mInputMax = newFromMax; }
+        void setInputMax (auto newFromMax)
+        {
+            DBG ("Changing input max from " + juce::String (mInputMax.load()) + " to " + juce::String (newFromMax) + " for path " + mPath);
+            mInputMax = newFromMax;
+        }
 
-        void setOutputMidiChannel (auto newOutputMidiChannel) { mOutputMidiChan = newOutputMidiChannel; }
+        void setOutputMidiChannel (auto newOutputMidiChannel)
+        {
+            DBG ("Changing output MIDI channel from " + juce::String (mOutputMidiChan) + " to " + juce::String (newOutputMidiChannel) + " for path " + mPath);
+            mOutputMidiChan = newOutputMidiChannel;
+        }
 
-        void setOutputMidiNum (auto newOutputNum) { mOutMidiNum = newOutputNum; }
+        void setOutputMidiNum (auto newOutputNum)
+        {
+            DBG ("Changing output MIDI number from " + juce::String (mOutMidiNum) + " to " + juce::String (newOutputNum) + " for path " + mPath);
+            mOutMidiNum = newOutputNum;
+        }
 
-        void setOutputType (auto newOutputType) { mMsgType = newOutputType; }
+        void setOutputType (auto newOutputType)
+        {
+            DBG ("Changing output type from " + juce::String (mMsgType) + " to " + juce::String (newOutputType) + " for path " + mPath);
+            mMsgType = newOutputType;
+        }
 
-        void setMuted (bool shouldBeMuted) { mMuted = shouldBeMuted; }
+        void setMuted (bool shouldBeMuted)
+        {
+            DBG ("Changing muted from " + juce::String (static_cast<int> (mMuted)) + " to " + juce::String (static_cast<int> (shouldBeMuted)) + " for path " + mPath);
+            mMuted = shouldBeMuted;
+        }
 
-        void setRawValue (auto newValue) { mRawValue = newValue; }
+        void setRawValue (auto newValue)
+        {
+            DBG ("Changing raw value from " + juce::String (mRawValue.load()) + " to " + juce::String (newValue) + " for path " + mPath);
+            mRawValue = newValue;
+        }
         auto getRawValue() const { return mRawValue.load(); }
-
-        inline auto& getLastValueAtomic() { return mRawValue; }
-        inline auto& getLastValueVersionAtomic() { return mLastValueVersion; }
 
         auto normalizeValue (auto rawValue) -> auto
         {
@@ -202,14 +235,22 @@ namespace birdhouse
             return mPath;
         }
 
+        inline auto& getLastValueAtomic() { return mRawValue; }
+        inline auto& getLastValueVersionAtomic() { return mLastValueVersion; }
+        inline void incrementLastValueVersion()
+        {
+            DBG ("Incrementing last value version for path " + mPath);
+            mLastValueVersion++;
+        }
+
     private:
-        juce::String mPath;
+        juce::String mPath { "" };
         std::atomic<float> mInputMin { 0.f }, mInputMax { 1.0f };
         std::atomic<float> mRawValue { 0.f };
         std::atomic<int> mLastValueVersion { 0 };
-        int mOutputMidiChan, mOutMidiNum;
-        MsgType mMsgType;
-        bool mMuted;
+        int mOutputMidiChan { 1 }, mOutMidiNum { 48 };
+        MsgType mMsgType { MsgType::MidiCC };
+        bool mMuted { false };
     };
 
     class OSCBridgeChannel : public BridgeOSCMessageReceiver, public BridgeMidiBufferManager
@@ -220,8 +261,8 @@ namespace birdhouse
         {
             // Register callback that will be called when an OSC message is received
             this->addOSCCallback (
-                [this] (float rawValue, bool messageAccepted, const juce::OSCMessage& message) {
-                    juce::ignoreUnused (message);
+                [this] (float rawValue, bool messageAccepted, const juce::OSCMessage& oscMessage) {
+                    juce::ignoreUnused (oscMessage);
                     mState.setRawValue (rawValue);
 
                     if (!mState.muted() && messageAccepted)
@@ -231,6 +272,8 @@ namespace birdhouse
                         this->addMidiMessage (midiMessage);
                     }
                 });
+
+            juce::Logger::writeToLog ("Set up bridge channel with path: " + mState.path() + " and output channel: " + juce::String (mState.outChan()) + " and output number: " + juce::String (mState.outNum()) + " and output type: " + juce::String (mState.outType()) + " and input min: " + juce::String (mState.inMin()) + " and input max: " + juce::String (mState.inMax()));
         }
 
         auto& state() { return mState; }

@@ -34,40 +34,29 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     addAndMakeVisible (titleLabel);
 
     // Get state
-    auto state = processorRef.oscBridgeState;
+    // auto state = processorRef.oscBridgeState;
 
-    if (!state.isValid())
-    {
-        juce::Logger::writeToLog ("State is invalid, using default");
-        state = processorRef.createEmptyOSCState();
-    }
+    // if (!state.isValid())
+    // {
+    //     juce::Logger::writeToLog ("State is invalid, using default");
+    //     state = processorRef.createEmptyOSCState();
+    // }
 
     // Set up each channel
-    for (auto i = 0; i < numBridgeChans; i++)
+    for (auto chanNum = 0; chanNum < numBridgeChans; chanNum++)
     {
-        auto channelState = state.getChildWithName ("ChannelSettings").getChild (i);
-
-        oscBridgeChannelEditors.push_back (std::make_unique<OSCBridgeChannelEditor>());
+        oscBridgeChannelEditors.push_back (std::make_unique<OSCBridgeChannelEditor> (chanNum, processorRef.parameters));
 
         // Set default values for the editors
         oscBridgeChannelEditors.back()->setFont (juce::Font (defaultFontSize, juce::Font::plain));
-        if (channelState.isValid())
-        {
-            oscBridgeChannelEditors.back()->setState (channelState);
-        }
-        else
-        {
-            juce::Logger::writeToLog ("Channel state is invalid");
-        }
-        oscBridgeChannelEditors.back()->setTitle (juce::String (i + 1));
+        oscBridgeChannelEditors.back()->setTitle (juce::String (chanNum));
 
         addAndMakeVisible (*oscBridgeChannelEditors.back());
     }
 
-    auto globalState = state.getChildWithName ("GlobalSettings");
-
     // Port
-    auto port = globalState.getProperty ("Port", 8000);
+    // auto port = processorRef.parameters.state.getProperty ("Port", 8000);
+    auto port = 1;
     portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
     portEditor.setJustification (juce::Justification::left);
     portEditor.setText (juce::String (port));
@@ -76,7 +65,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     // Filter text
     portEditor.onTextChange = [this] {
         auto newport = portEditor.getText().getIntValue();
-        auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
 
         // Port can only be a number from 0 to 65535
         // If the port is not a number, set it to 8000
@@ -94,16 +82,16 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     };
 
     // On return -> lose focus
-    portEditor.onReturnKey = [this] {
-        portEditor.focusLost (FocusChangeType::focusChangedDirectly);
-    };
+    // portEditor.onReturnKey = [this] {
+    //     portEditor.focusLost (FocusChangeType::focusChangedDirectly);
+    // };
 
-    // Focus lost -> update state
-    portEditor.onFocusLost = [this] {
-        auto newport = portEditor.getText().getIntValue();
-        auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
-        globalSettings.setProperty ("Port", newport, nullptr);
-    };
+    // // Focus lost -> update state
+    // portEditor.onFocusLost = [this] {
+    //     auto newport = portEditor.getText().getIntValue();
+    //     auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
+    //     globalSettings.setProperty ("Port", newport, nullptr);
+    // };
 
     addAndMakeVisible (portEditor);
 
@@ -145,30 +133,30 @@ void PluginEditor::paint (juce::Graphics& g)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     // Update connection status
-    auto connectionStatus = processorRef.oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("ConnectionStatus", false);
+    // auto connectionStatus = processorRef.oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("ConnectionStatus", false);
 
-    if (connectionStatus)
-    {
-        // portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
-        connectionStatusLabel.setText ("Connected", juce::dontSendNotification);
-        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::green);
-    }
-    else
-    {
-        // portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
+    // if (connectionStatus)
+    // {
+    //     // portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
+    //     connectionStatusLabel.setText ("Connected", juce::dontSendNotification);
+    //     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::green);
+    // }
+    // else
+    // {
+    //     // portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
 
-        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
-        connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
-    }
+    //     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
+    //     connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
+    // }
 
     // Update the activity indicators
 
     auto chanIndex = 0u;
     for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
     {
-        auto processorChan = processorRef.getChannel (chanIndex);
+        auto& chan = *processorRef.getChannel (chanIndex);
 
-        oscBridgeChannelEditor->updateActivityForChan (processorChan.get()->state());
+        // oscBridgeChannelEditor->updateActivityForChan (processorChan.state());
 
         chanIndex++;
     }

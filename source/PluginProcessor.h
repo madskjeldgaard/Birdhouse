@@ -3,6 +3,7 @@
 #include "bridge/LambdaStateListener.h"
 #include "bridge/OSCBridgeChannel.h"
 #include "bridge/OSCBridgeManager.h"
+#include "dsp/BirdHouseParams.h"
 #include "dsp/SimpleNoiseGenerator.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -12,7 +13,7 @@ static constexpr auto numBridgeChans = 8;
     #include "ipps.h"
 #endif
 
-class PluginProcessor : public juce::AudioProcessor
+class PluginProcessor : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
 
 {
 public:
@@ -45,26 +46,23 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    // Create state
-    juce::ValueTree createEmptyOSCState();
+    juce::AudioProcessorValueTreeState parameters { *this, nullptr, "Parameters", birdhouse::BirdHouseParams<numBridgeChans>::createParameterLayout() };
 
-    juce::ValueTree oscBridgeState;
-
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState parameters { *this, nullptr, "Parameters", createParameterLayout() };
-
-    void updateListenerStates();
-    void setStateChangeCallbacks();
+    // void updateListenerStates();
+    // void setStateChangeCallbacks();
 
     auto& getChannel (auto index) { return mOscBridgeChannels[index]; }
     void updateChannelsFromParams();
+
+    std::atomic<bool> mParametersNeedUpdating = true;
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
 
 private:
     std::vector<std::shared_ptr<birdhouse::OSCBridgeChannel>> mOscBridgeChannels;
     std::shared_ptr<birdhouse::OSCBridgeManager> mOscBridgeManager;
 
-    std::vector<std::shared_ptr<LambdaStateListener>> mChanListeners {};
-    std::shared_ptr<LambdaStateListener> mGlobalStateListener;
+    // std::vector<std::shared_ptr<LambdaStateListener>> mChanListeners {};
+    // std::shared_ptr<LambdaStateListener> mGlobalStateListener;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

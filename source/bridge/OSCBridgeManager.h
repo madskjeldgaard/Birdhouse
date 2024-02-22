@@ -15,8 +15,25 @@ namespace birdhouse
     class OSCBridgeManager : private juce::OSCReceiver, private juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
     {
     public:
-        OSCBridgeManager()
+        using GlobalOSCCallback = std::function<void (const juce::OSCMessage&)>;
+
+        OSCBridgeManager (std::vector<std::shared_ptr<OSCBridgeChannel>> channels)
         {
+            for (auto& channel : channels)
+            {
+                registerChannel (channel);
+
+                // Add default callback
+                channel->addOSCCallback ([&] (auto normalizedValue, auto valueAccepted, auto rawOSCMessage) {
+                    juce::ignoreUnused (rawOSCMessage);
+                    juce::Logger::writeToLog ("Normalized value: " + juce::String (normalizedValue) + " Value accepted: " + juce::String (static_cast<int> (valueAccepted)) + " Raw OSC message: " + rawOSCMessage.getAddressPattern().toString());
+                });
+            }
+
+            addGlobalCallback ([&] (const juce::OSCMessage& message) {
+                juce::Logger::writeToLog ("Global callback: " + message.getAddressPattern().toString());
+            });
+
             mOscReceiver.addListener (this);
         }
 
@@ -28,21 +45,30 @@ namespace birdhouse
         bool startListening (int port)
         {
             auto result = mOscReceiver.connect (port);
-            juce::Logger::writeToLog ("OSC Bridge Manager: startListening:" + juce::String (static_cast<int> (result)));
+            DBG ("OSC Bridge Manager: startListening:" + juce::String (static_cast<int> (result)) + " on port:" + juce::String (port));
             return result;
         }
 
         void stopListening()
         {
+            DBG ("OSC Bridge Manager: stopListening");
             mOscReceiver.disconnect();
         }
 
         void registerChannel (std::shared_ptr<OSCBridgeChannel> channel)
         {
+            DBG ("Registering channel with path: " + channel->state().path());
             if (channel)
             {
                 mChannels.emplace_back (channel);
             }
+        }
+
+        void addGlobalCallback (GlobalOSCCallback newCallback)
+        {
+            DBG ("OSC Bridge Manager: addGlobalCallback");
+            mGlobalCallbacks.push_back (std::move (newCallback));
+            DBG ("Num global callbacks:" + juce::String (mGlobalCallbacks.size()));
         }
 
         auto getChannels() const -> const std::vector<std::shared_ptr<OSCBridgeChannel>>&
@@ -58,6 +84,12 @@ namespace birdhouse
     protected:
         void oscMessageReceived (const juce::OSCMessage& message) override
         {
+            DBG ("Globally received OSC message:" + message.getAddressPattern().toString() + " with " + juce::String (message.size()) + " arguments");
+            for (auto& callback : mGlobalCallbacks)
+            {
+                callback (message);
+            }
+
             for (auto& channel : mChannels)
             {
                 if (channel->matchesPath (message.getAddressPattern().toString()))
@@ -70,5 +102,6 @@ namespace birdhouse
     private:
         juce::OSCReceiver mOscReceiver;
         std::vector<std::shared_ptr<OSCBridgeChannel>> mChannels;
+        std::vector<GlobalOSCCallback> mGlobalCallbacks {};
     };
 }

@@ -60,27 +60,32 @@ public:
         pathEditor.setText (path);
     }
 
-    void setInputMin (auto min)
+    void setInMin (auto min)
     {
         inputMinEditor.setText (juce::String (min));
     }
 
-    void setInputMax (auto max)
+    void setInMax (auto max)
     {
         inputMaxEditor.setText (juce::String (max));
     }
 
-    void setOutputMidiChannel (int channel)
+    void setMidiChan (int channel)
     {
         outputMidiChannelEditor.setText (juce::String (channel));
     }
 
-    void setOutputNum (int num)
+    void setMuted (bool muted)
+    {
+        muteButton.setToggleState (muted, juce::dontSendNotification);
+    }
+
+    void setMidiNum (int num)
     {
         outputNumEditor.setText (juce::String (num));
     }
 
-    void setOutputMsgType (int type)
+    void setMsgType (int type)
     {
         outputMsgTypeComboBox.setSelectedId (type + 1);
     }
@@ -126,16 +131,6 @@ public:
 
     auto& getActivityIndicator() { return activityIndicator; }
 
-    enum class AttachmentType {
-        Path,
-        InputMin,
-        InputMax,
-        OutputMidiChannel,
-        OutputMidiNum,
-        MsgType,
-        Muted
-    };
-
 private:
     std::size_t mChannelNum { 0 };
     juce::AudioProcessorValueTreeState& mApvts;
@@ -150,8 +145,6 @@ private:
     juce::ComboBox outputMsgTypeComboBox;
     juce::TextButton muteButton { "Mute" };
 
-    // Attachments for the text editors
-    // juce::AudioProcessorValueTreeState::ButtonAttachment muteButtonAttachment;
 
     ActivityIndicator<64> activityIndicator;
 
@@ -159,7 +152,22 @@ private:
 
     std::atomic<int> lastValueVersion { -1 };
 
+    // Attachments
     std::vector<std::unique_ptr<birdhouse::ITextEditorAttachment>> textEditorAttachments {};
+
+    // Setup button attachment
+    juce::AudioProcessorValueTreeState::ButtonAttachment muteButtonAttachment {
+        mApvts,
+        "Muted" + juce::String (mChannelNum),
+        muteButton
+    };
+
+    // MsgType
+    juce::AudioProcessorValueTreeState::ComboBoxAttachment msgTypeAttachment {
+        mApvts,
+        "MsgType" + juce::String (mChannelNum),
+        outputMsgTypeComboBox
+    };
 
     void setupAttachments()
     {
@@ -245,8 +253,8 @@ private:
         inputMinEditor.setInputRestrictions (5, "0123456789.-");
 
         // text change-> filter text
-        inputMinEditor.onTextChange = [&] {
-        };
+        // inputMinEditor.onTextChange = [&] {
+        // };
 
         // Return -> focus lost
         inputMinEditor.onReturnKey = [&] {
@@ -257,9 +265,9 @@ private:
         inputMaxEditor.setInputRestrictions (5, "0123456789.-");
 
         // Filter text
-        inputMaxEditor.onTextChange = [&] {
+        // inputMaxEditor.onTextChange = [&] {
 
-        };
+        // };
 
         // Return -> focus lost
         inputMaxEditor.onReturnKey = [&] {
@@ -269,23 +277,6 @@ private:
         addAndMakeVisible (outputMidiChannelEditor);
         outputMidiChannelEditor.setInputRestrictions (2, "0123456789");
 
-        // Filter text
-        // outputMidiChannelEditor.onTextChange = [this] {
-        //     // Clip to midi range 1-16 for channels
-        //     auto value = outputMidiChannelEditor.getText().getIntValue();
-
-        //     if (value < 1)
-        //     {
-        //         value = 1;
-        //     }
-        //     else if (value > 16)
-        //     {
-        //         value = 16;
-        //     }
-
-        //     outputMidiChannelEditor.setText (juce::String (value), false);
-        // };
-
         // Return -> focus lost
         outputMidiChannelEditor.onReturnKey = [&] {
             outputMidiChannelEditor.focusLost (FocusChangeType::focusChangedDirectly);
@@ -293,24 +284,6 @@ private:
 
         addAndMakeVisible (outputNumEditor);
         outputNumEditor.setInputRestrictions (3, "0123456789");
-
-        // Filter text
-        outputNumEditor.onTextChange = [&] {
-            // Clip to midi range
-            auto value = outputNumEditor.getText().getIntValue();
-
-            // Clip to midi range
-            if (value < 0)
-            {
-                value = 0;
-            }
-            else if (value > 127)
-            {
-                value = 127;
-            }
-
-            outputNumEditor.setText (juce::String (value), false);
-        };
 
         // Return -> focus lost
         outputNumEditor.onReturnKey = [&] {

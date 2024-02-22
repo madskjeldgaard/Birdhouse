@@ -61,6 +61,21 @@ namespace birdhouse
             state.removeParameterListener ("Port", &processor);
         }
 
+        // This will set up all the non-Audio Parameter parameters (such as port, inMin, inMax) in the state of the AudioProcessorValueTreeState;
+        static void setupNonAudioParameters (juce::AudioProcessorValueTreeState& state)
+        {
+            for (auto chanNum = 1u; chanNum <= NumBridgeChans; chanNum++)
+            {
+                const auto inMinParamID = juce::Identifier (juce::String ("InMin") + juce::String (chanNum));
+                const auto inMaxParamID = juce::Identifier (juce::String ("InMax") + juce::String (chanNum));
+                const auto pathParamID = juce::Identifier (juce::String ("Path") + juce::String (chanNum));
+
+                state.state.setProperty (inMinParamID, 0.0f, nullptr);
+                state.state.setProperty (inMaxParamID, 1.0f, nullptr);
+                state.state.setProperty (pathParamID, "/" + juce::String (chanNum) + "/value", nullptr);
+            }
+        }
+
         static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
         {
             // Add port parameter
@@ -72,20 +87,22 @@ namespace birdhouse
             for (auto chanNum = 1u; chanNum <= NumBridgeChans; chanNum++)
             {
                 // Add InMin parameter for this channel
-                auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
-                auto inMinParameterName = juce::String ("InMin") + juce::String (chanNum);
-                auto inMinMinValue = 0.f;
-                auto inMinMaxValue = 20000.f;
-                auto inMinDefaultValue = 0.f;
-                portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMinParamID, inMinParameterName, inMinMinValue, inMinMaxValue, inMinDefaultValue));
+                // auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
+                // auto inMinParameterName = juce::String ("InMin") + juce::String (chanNum);
+                // auto inMinMinValue = 0.f;
+                // auto inMinMaxValue = 20000.f;
+                // auto inMinDefaultValue = 0.f;
+                // auto inMinIntervalValue = 0.e1f;
+                // auto normaliseableRange = juce::NormalisableRange<float> (inMinMinValue, inMinMaxValue);
+                // portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMinParamID, inMinParameterName, normaliseableRange, inMinDefaultValue));
 
                 // Add InMax parameter
-                auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
-                auto inMaxParameterName = juce::String ("InMax") + juce::String (chanNum);
-                auto inMaxMinValue = 0.f;
-                auto inMaxMaxValue = 20000.f;
-                auto inMaxDefaultValue = 1.f;
-                portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMaxParamID, inMaxParameterName, inMaxMinValue, inMaxMaxValue, inMaxDefaultValue));
+                // auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
+                // auto inMaxParameterName = juce::String ("InMax") + juce::String (chanNum);
+                // auto inMaxMinValue = 0.f;
+                // auto inMaxMaxValue = 20000.f;
+                // auto inMaxDefaultValue = 1.f;
+                // portLayout.add (std::make_unique<juce::AudioParameterFloat> (inMaxParamID, inMaxParameterName, inMaxMinValue, inMaxMaxValue, inMaxDefaultValue));
 
                 // Add MIDI Chan parameter
                 auto midiChanParamID = juce::String ("MidiChan") + juce::String (chanNum);
@@ -115,10 +132,8 @@ namespace birdhouse
                 // Add Muted parameter
                 auto mutedParamID = juce::String ("Muted") + juce::String (chanNum);
                 auto mutedParameterName = juce::String ("Muted") + juce::String (chanNum);
-                auto mutedMinValue = 0;
-                auto mutedMaxValue = 1;
-                auto mutedDefaultValue = 0;
-                portLayout.add (std::make_unique<juce::AudioParameterInt> (mutedParamID, mutedParameterName, mutedMinValue, mutedMaxValue, mutedDefaultValue));
+                auto mutedDefaultValue = false;
+                portLayout.add (std::make_unique<juce::AudioParameterBool> (mutedParamID, mutedParameterName, mutedDefaultValue));
             }
 
             return portLayout;

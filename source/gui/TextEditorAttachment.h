@@ -50,14 +50,18 @@ namespace birdhouse
                 if constexpr (std::is_same<ParamType, int>::value)
                 {
                     auto value = mEditor.getText().getIntValue();
-                    DBG ("Setting value: " << value);
-                    param->setValueNotifyingHost (value);
+                    auto range = param->getNormalisableRange();
+                    auto normalized = range.convertTo0to1 (value);
+                    DBG ("Setting value: " << value << " (normalized: " << normalized << ")");
+                    param->setValueNotifyingHost (normalized);
                 }
                 else if constexpr (std::is_same<ParamType, float>::value)
                 {
                     auto value = mEditor.getText().getFloatValue();
-                    DBG ("Setting value: " << value);
-                    param->setValueNotifyingHost (value);
+                    auto range = param->getNormalisableRange();
+                    auto normalized = range.convertTo0to1 (value);
+                    DBG ("Setting value: " << value << " (normalized: " << normalized << ")");
+                    param->setValueNotifyingHost (normalized);
                 }
             };
         }

@@ -51,6 +51,29 @@ PluginEditor::PluginEditor (PluginProcessor& p)
         oscBridgeChannelEditors.back()->setFont (juce::Font (defaultFontSize, juce::Font::plain));
         oscBridgeChannelEditors.back()->setTitle (juce::String (chanNum));
 
+        // Get defaults from the non-audio parameter parameters and set them in the GUI
+        auto path = processorRef.parameters.state.getProperty ("Path" + juce::String (chanNum), "/" + juce::String (chanNum) + "/value");
+        auto inMin = processorRef.parameters.state.getProperty ("InMin" + juce::String (chanNum), 0.0f);
+        auto inMax = processorRef.parameters.state.getProperty ("InMax" + juce::String (chanNum), 1.0f);
+        oscBridgeChannelEditors.back()->setPath (path);
+        oscBridgeChannelEditors.back()->setInMin (inMin);
+        oscBridgeChannelEditors.back()->setInMax (inMax);
+
+        // Now set up the defaults for audio parameters
+        auto midiChanParam = processorRef.parameters.getParameter ("MidiChan" + juce::String (chanNum));
+        auto midiChan = static_cast<juce::AudioParameterInt*> (midiChanParam)->get();
+        auto midiNumParam = processorRef.parameters.getParameter ("MidiNum" + juce::String (chanNum));
+        auto midiNum = static_cast<juce::AudioParameterInt*> (midiNumParam)->get();
+        auto msgTypeParam = processorRef.parameters.getParameter ("MsgType" + juce::String (chanNum));
+        auto msgType = static_cast<juce::AudioParameterInt*> (msgTypeParam)->get();
+        auto mutedParam = processorRef.parameters.getParameter ("Muted" + juce::String (chanNum));
+        auto muted = static_cast<juce::AudioParameterBool*> (mutedParam)->get();
+
+        oscBridgeChannelEditors.back()->setMidiChan (midiChan);
+        oscBridgeChannelEditors.back()->setMidiNum (midiNum);
+        oscBridgeChannelEditors.back()->setMsgType (msgType);
+        oscBridgeChannelEditors.back()->setMuted (muted);
+
         addAndMakeVisible (*oscBridgeChannelEditors.back());
     }
 
@@ -80,6 +103,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
             portEditor.setText ("65535", false);
         }
     };
+    portAttachment->attach ("Port");
 
     // On return -> lose focus
     // portEditor.onReturnKey = [this] {

@@ -2,6 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build",
+    },
+    {
       "label": "Configure BirdHouse",
       "type": "shell",
       "command": "cmake -S . -B build",

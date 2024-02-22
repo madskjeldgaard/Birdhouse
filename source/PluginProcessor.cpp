@@ -354,32 +354,32 @@ void PluginProcessor::updateChannelsFromParams()
     for (auto chanNum = 1; chanNum <= numBridgeChans; chanNum++)
     {
         // Identifiers
-        const auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
-        const auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
+        // const auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
+        // const auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
         const auto midiChanParamID = juce::String ("MidiChan") + juce::String (chanNum);
         const auto midiNumParamID = juce::String ("MidiNum") + juce::String (chanNum);
         const auto msgTypeParamID = juce::String ("MsgType") + juce::String (chanNum);
         const auto mutedParamID = juce::String ("Muted") + juce::String (chanNum);
 
         // Params
-        const auto inMinParam = parameters.getParameter (inMinParamID);
-        const auto inMaxParam = parameters.getParameter (inMaxParamID);
+        // const auto inMinParam = parameters.getParameter (inMinParamID);
+        // const auto inMaxParam = parameters.getParameter (inMaxParamID);
         const auto midiChanParam = parameters.getParameter (midiChanParamID);
         const auto midiNumParam = parameters.getParameter (midiNumParamID);
         const auto msgTypeParam = parameters.getParameter (msgTypeParamID);
         const auto mutedParam = parameters.getParameter (mutedParamID);
 
         // Param Values
-        const auto inMin = static_cast<juce::AudioParameterFloat*> (inMinParam)->get();
-        const auto inMax = static_cast<juce::AudioParameterFloat*> (inMaxParam)->get();
+        // const auto inMin = static_cast<juce::AudioParameterFloat*> (inMinParam)->get();
+        // const auto inMax = static_cast<juce::AudioParameterFloat*> (inMaxParam)->get();
         const auto midiChan = static_cast<juce::AudioParameterInt*> (midiChanParam)->get();
         const auto midiNum = static_cast<juce::AudioParameterInt*> (midiNumParam)->get();
         const auto msgType = static_cast<juce::AudioParameterInt*> (msgTypeParam)->get();
-        const auto muted = static_cast<juce::AudioParameterInt*> (mutedParam)->get();
+        const auto muted = static_cast<juce::AudioParameterBool*> (mutedParam)->get();
 
         const auto chan = mOscBridgeChannels[static_cast<std::size_t> (chanNum - 1)];
-        chan->state().setInputMin (inMin);
-        chan->state().setInputMax (inMax);
+        // chan->state().setInputMin (inMin);
+        // chan->state().setInputMax (inMax);
         chan->state().setOutputMidiChannel (static_cast<int> (midiChan));
         chan->state().setOutputMidiNum (static_cast<int> (midiNum));
         chan->state().setOutputType (static_cast<birdhouse::MsgType> (static_cast<int> (msgType)));

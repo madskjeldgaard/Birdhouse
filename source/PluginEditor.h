@@ -33,6 +33,10 @@ private:
 
     // Port
     juce::TextEditor portEditor;
+    // Parameter attachment
+    std::unique_ptr<birdhouse::TextEditorAttachment<int>> portAttachment{
+        std::make_unique<birdhouse::TextEditorAttachment<int>> (processorRef.parameters, portEditor, nullptr)
+  };
 
     // GUI for each channel
     std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;

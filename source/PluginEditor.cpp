@@ -43,7 +43,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     // }
 
     // Set up each channel
-    for (auto chanNum = 0; chanNum < numBridgeChans; chanNum++)
+    for (auto chanNum = 1u; chanNum <= numBridgeChans; chanNum++)
     {
         oscBridgeChannelEditors.push_back (std::make_unique<OSCBridgeChannelEditor> (chanNum, processorRef.parameters));
 

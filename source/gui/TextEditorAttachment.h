@@ -6,70 +6,67 @@
 namespace birdhouse
 {
 
-    /**
-   * @class TextEditorAttachment
-   * @brief The TextEditorAttachment class is a helper class to attach a TextEditor to an AudioParameterFloat or AudioParameterInt.
-   *
-   */
-    template <typename ParamType>
-    class TextEditorAttachment
+    class ITextEditorAttachment
     {
     public:
-        TextEditorAttachment (juce::RangedAudioParameter* rangedAudioParam, juce::TextEditor& editor, juce::UndoManager* undoManager = nullptr)
-            : mTextEditor (editor), mUndoManager (undoManager)
+        virtual ~ITextEditorAttachment() = default;
+        virtual void attach (const juce::String& parameterID) = 0;
+    };
+
+    template <typename ParamType>
+    class TextEditorAttachment : public ITextEditorAttachment
+    {
+    public:
+        TextEditorAttachment (juce::AudioProcessorValueTreeState& apvts, juce::TextEditor& editor, juce::UndoManager* undoManager = nullptr)
+            : mApvts (apvts), mEditor (editor), mUndoManager (undoManager) {}
+
+        void attach (const juce::String& parameterID) override
         {
-            if constexpr (std::is_same<ParamType, juce::AudioParameterFloat>::value)
+            auto param = mApvts.getParameter (parameterID);
+
+            if (param == nullptr)
             {
-                setupForFloatParameter (rangedAudioParam);
+                DBG ("Parameter not found: " << parameterID);
+                return;
             }
-            else if constexpr (std::is_same<ParamType, juce::AudioParameterInt>::value)
-            {
-                setupForIntParameter (rangedAudioParam);
-            }
-            else
-            {
-                jassertfalse;
-            }
+
+            auto updateEditor = [&] (float value) {
+                if constexpr (std::is_same<ParamType, int>::value)
+                {
+                    auto intValue = static_cast<int> (value);
+                    DBG ("Updating editor: " << intValue);
+                    mEditor.setText (juce::String (intValue), juce::dontSendNotification);
+                }
+                else if constexpr (std::is_same<ParamType, float>::value)
+                {
+                    DBG ("Updating editor: " << value);
+                    mEditor.setText (juce::String (value), juce::dontSendNotification);
+                }
+            };
+
+            attachment = std::make_unique<juce::ParameterAttachment> (*param, updateEditor, mUndoManager);
+
+            mEditor.onTextChange = [this, param] {
+                if constexpr (std::is_same<ParamType, int>::value)
+                {
+                    auto value = mEditor.getText().getIntValue();
+                    DBG ("Setting value: " << value);
+                    param->setValueNotifyingHost (value);
+                }
+                else if constexpr (std::is_same<ParamType, float>::value)
+                {
+                    auto value = mEditor.getText().getFloatValue();
+                    DBG ("Setting value: " << value);
+                    param->setValueNotifyingHost (value);
+                }
+            };
         }
 
     private:
-        juce::TextEditor& mTextEditor;
+        juce::AudioProcessorValueTreeState& mApvts;
+        juce::TextEditor& mEditor;
         juce::UndoManager* mUndoManager;
         std::unique_ptr<juce::ParameterAttachment> attachment;
-
-        void setupForFloatParameter (auto parameter)
-        {
-            attachment = std::make_unique<juce::ParameterAttachment> (
-                *parameter, [&] (float newValue) {
-                    juce::ignoreUnused (parameter);
-                    mTextEditor.setText (juce::String (newValue), juce::dontSendNotification);
-                },
-                mUndoManager);
-
-            mTextEditor.onTextChange = [this, &parameter] {
-                auto string = mTextEditor.getText();
-                auto value = string.getFloatValue();
-                auto normalized = parameter->convertTo0to1 (value);
-                parameter->setValueNotifyingHost (normalized);
-            };
-        }
-
-        void setupForIntParameter (auto parameter)
-        {
-            attachment = std::make_unique<juce::ParameterAttachment> (
-                *parameter, [&] (float newValue) {
-                    juce::ignoreUnused (parameter);
-                    mTextEditor.setText (juce::String (static_cast<int> (newValue)), juce::dontSendNotification);
-                },
-                mUndoManager);
-
-            mTextEditor.onTextChange = [this, &parameter] {
-                auto string = mTextEditor.getText();
-                auto value = string.getIntValue();
-                auto normalized = parameter->convertTo0to1 (value);
-                parameter->setValueNotifyingHost (normalized);
-            };
-        }
     };
 
-}
+} // namespace birdhouse

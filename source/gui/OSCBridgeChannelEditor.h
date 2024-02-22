@@ -151,11 +151,7 @@ private:
     juce::TextButton muteButton { "Mute" };
 
     // Attachments for the text editors
-    birdhouse::TextEditorAttachment<juce::AudioParameterFloat> inputMinAttachment;
-    birdhouse::TextEditorAttachment<juce::AudioParameterFloat> inputMaxAttachment;
-    birdhouse::TextEditorAttachment<juce::AudioParameterInt> outputMidiChannelAttachment;
-    birdhouse::TextEditorAttachment<juce::AudioParameterInt> outputNumAttachment;
-    juce::AudioProcessorValueTreeState::ButtonAttachment muteButtonAttachment;
+    // juce::AudioProcessorValueTreeState::ButtonAttachment muteButtonAttachment;
 
     ActivityIndicator<64> activityIndicator;
 
@@ -163,34 +159,40 @@ private:
 
     std::atomic<int> lastValueVersion { -1 };
 
+    std::vector<std::unique_ptr<birdhouse::ITextEditorAttachment>> textEditorAttachments {};
+
     void setupAttachments()
     {
         // Construct parameter ID strings based on channel number
-        auto muteParamId = juce::Identifier ("mute" + juce::String (mChannelNum));
-        auto pathParamId = juce::Identifier ("path" + juce::String (mChannelNum));
-        auto inputMinParamId = juce::Identifier ("inputMin" + juce::String (mChannelNum));
-        auto inputMaxParamId = juce::Identifier ("inputMax" + juce::String (mChannelNum));
-        auto outputMidiChannelParamId = juce::Identifier ("outputMidiChannel" + juce::String (mChannelNum));
-        auto outputMidiNumParamId = juce::Identifier ("outputMidiNum" + juce::String (mChannelNum));
-        auto msgTypeParamId = juce::Identifier ("msgType" + juce::String (mChannelNum));
+        auto muteParamId = "Muted" + juce::String (mChannelNum);
+        auto pathParamId = "Path" + juce::String (mChannelNum);
+        auto inputMinParamId = "InMin" + juce::String (mChannelNum);
+        auto inputMaxParamId = "InMax" + juce::String (mChannelNum);
+        auto outputMidiChannelParamId = "MidiChan" + juce::String (mChannelNum);
+        auto outputMidiNumParamId = "MidiNum" + juce::String (mChannelNum);
+        auto msgTypeParamId = "MsgType" + juce::String (mChannelNum);
 
         // Set up attachments
 
         // Min
-        auto inMin = std::make_unique<birdhouse::TextEditorAttachment<juce::AudioParameterFloat>> (
-            mApvts.getParameter (inputMinParamId), inputMinEditor, nullptr);
+        textEditorAttachments.push_back (std::make_unique<birdhouse::TextEditorAttachment<float>> (
+            mApvts, inputMinEditor, nullptr));
+        textEditorAttachments.back()->attach (inputMinParamId);
 
         // Max
-        auto inMax = std::make_unique<birdhouse::TextEditorAttachment<juce::AudioParameterFloat>> (
-            mApvts.getParameter (inputMaxParamId), inputMaxEditor, nullptr);
+        textEditorAttachments.push_back (std::make_unique<birdhouse::TextEditorAttachment<float>> (
+            mApvts, inputMaxEditor, nullptr));
+        textEditorAttachments.back()->attach (inputMaxParamId);
 
-        // Midi channel
-        auto midiChan = std::make_unique<birdhouse::TextEditorAttachment<juce::AudioParameterInt>> (
-            mApvts.getParameter (outputMidiChannelParamId), outputMidiChannelEditor, nullptr);
+        // outChan
+        textEditorAttachments.push_back (std::make_unique<birdhouse::TextEditorAttachment<int>> (
+            mApvts, outputMidiChannelEditor, nullptr));
+        textEditorAttachments.back()->attach (outputMidiChannelParamId);
 
-        // Midi num
-        auto midiNum = std::make_unique<birdhouse::TextEditorAttachment<juce::AudioParameterInt>> (
-            mApvts.getParameter (outputMidiNumParamId), outputNumEditor, nullptr);
+        // outNum
+        textEditorAttachments.push_back (std::make_unique<birdhouse::TextEditorAttachment<int>> (
+            mApvts, outputNumEditor, nullptr));
+        textEditorAttachments.back()->attach (outputMidiNumParamId);
 
         // TODO:
         // Msg type
@@ -268,21 +270,21 @@ private:
         outputMidiChannelEditor.setInputRestrictions (2, "0123456789");
 
         // Filter text
-        outputMidiChannelEditor.onTextChange = [this] {
-            // Clip to midi range 1-16 for channels
-            auto value = outputMidiChannelEditor.getText().getIntValue();
+        // outputMidiChannelEditor.onTextChange = [this] {
+        //     // Clip to midi range 1-16 for channels
+        //     auto value = outputMidiChannelEditor.getText().getIntValue();
 
-            if (value < 1)
-            {
-                value = 1;
-            }
-            else if (value > 16)
-            {
-                value = 16;
-            }
+        //     if (value < 1)
+        //     {
+        //         value = 1;
+        //     }
+        //     else if (value > 16)
+        //     {
+        //         value = 16;
+        //     }
 
-            outputMidiChannelEditor.setText (juce::String (value), false);
-        };
+        //     outputMidiChannelEditor.setText (juce::String (value), false);
+        // };
 
         // Return -> focus lost
         outputMidiChannelEditor.onReturnKey = [&] {

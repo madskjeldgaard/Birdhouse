@@ -17,6 +17,8 @@ public:
         channelState.addListener (this);
         auto defaultChangeCallback = [] (juce::Identifier) {};
         setChangedCallback (defaultChangeCallback);
+
+        DBG ("LambdaStateListener constructor");
     }
 
     // Destructor
@@ -29,6 +31,7 @@ public:
     void valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override
     {
         (void) treeWhosePropertyHasChanged;
+        DBG ("LambdaStateListener: valueTreePropertyChanged: " + property.toString());
         mChangedCallback (property);
     }
 

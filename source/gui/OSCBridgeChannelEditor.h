@@ -145,7 +145,6 @@ private:
     juce::ComboBox outputMsgTypeComboBox;
     juce::TextButton muteButton { "Mute" };
 
-
     ActivityIndicator<64> activityIndicator;
 
     juce::ValueTree oscBridgeState;
@@ -241,6 +240,11 @@ private:
                 }
 
                 pathEditor.setText (string, false);
+
+                // Set state
+                auto identifier = juce::Identifier ("Path" + juce::String (mChannelNum));
+                DBG ("GUI SETTING " << identifier << ": " << string);
+                mApvts.state.setProperty (identifier, string, nullptr);
             }
         };
 
@@ -253,8 +257,18 @@ private:
         inputMinEditor.setInputRestrictions (5, "0123456789.-");
 
         // text change-> filter text
-        // inputMinEditor.onTextChange = [&] {
-        // };
+        inputMinEditor.onTextChange = [&] {
+            const auto identifier = juce::Identifier ("InMin" + juce::String (mChannelNum));
+            auto string = inputMinEditor.getText();
+
+            if (string.isNotEmpty())
+            {
+                // Set state
+                auto floatVal = inputMinEditor.getText().getFloatValue();
+                DBG ("GUI SETTING " << identifier << ": " << floatVal);
+                mApvts.state.setProperty (identifier, floatVal, nullptr);
+            }
+        };
 
         // Return -> focus lost
         inputMinEditor.onReturnKey = [&] {
@@ -265,9 +279,18 @@ private:
         inputMaxEditor.setInputRestrictions (5, "0123456789.-");
 
         // Filter text
-        // inputMaxEditor.onTextChange = [&] {
+        inputMaxEditor.onTextChange = [&] {
+            const auto identifier = juce::Identifier ("InMax" + juce::String (mChannelNum));
+            auto string = inputMaxEditor.getText();
 
-        // };
+            if (string.isNotEmpty())
+            {
+                // Set state
+                auto floatVal = inputMaxEditor.getText().getFloatValue();
+                DBG ("GUI SETTING " << identifier << ": " << floatVal);
+                mApvts.state.setProperty (identifier, floatVal, nullptr);
+            }
+        };
 
         // Return -> focus lost
         inputMaxEditor.onReturnKey = [&] {

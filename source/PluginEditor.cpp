@@ -78,31 +78,13 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     }
 
     // Port
-    // auto port = processorRef.parameters.state.getProperty ("Port", 8000);
-    auto port = 1;
+    auto portParam = processorRef.parameters.getParameter ("Port");
+    auto port = static_cast<juce::AudioParameterInt*> (portParam)->get();
     portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
     portEditor.setJustification (juce::Justification::left);
     portEditor.setText (juce::String (port));
     portEditor.setInputRestrictions (5, "1234567890");
 
-    // Filter text
-    portEditor.onTextChange = [this] {
-        auto newport = portEditor.getText().getIntValue();
-
-        // Port can only be a number from 0 to 65535
-        // If the port is not a number, set it to 8000
-        // If the port is less than 0, set it to 0
-        // If the port is greater than 65535, set it to 65535
-        // Otherwise, set it to the new value
-        if (newport < 0)
-        {
-            portEditor.setText ("0", false);
-        }
-        else if (newport > 65535)
-        {
-            portEditor.setText ("65535", false);
-        }
-    };
     portAttachment->attach ("Port");
 
     // On return -> lose focus
@@ -157,33 +139,33 @@ void PluginEditor::paint (juce::Graphics& g)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     // Update connection status
-    // auto connectionStatus = processorRef.oscBridgeState.getChildWithName ("GlobalSettings").getProperty ("ConnectionStatus", false);
+    auto connectionStatus = processorRef.parameters.state.getProperty ("ConnectionStatus", false);
 
-    // if (connectionStatus)
-    // {
-    //     // portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
-    //     connectionStatusLabel.setText ("Connected", juce::dontSendNotification);
-    //     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::green);
-    // }
-    // else
-    // {
-    //     // portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
+    if (connectionStatus)
+    {
+        // portEditor.applyColourToAllText (BirdHouse::Colours::green, true);
+        connectionStatusLabel.setText ("Connected", juce::dontSendNotification);
+        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::green);
+    }
+    else
+    {
+        // portEditor.applyColourToAllText (BirdHouse::Colours::red, true);
 
-    //     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
-    //     connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
-    // }
+        connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::red);
+        connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
+    }
 
     // Update the activity indicators
 
-    auto chanIndex = 0u;
-    for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
-    {
-        auto& chan = *processorRef.getChannel (chanIndex);
+    // auto chanIndex = 0u;
+    // for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
+    // {
+    //     // auto& chan = *processorRef.getChannel (chanIndex);
 
-        // oscBridgeChannelEditor->updateActivityForChan (processorChan.state());
+    //     // oscBridgeChannelEditor->updateActivityForChan (processorChan.state());
 
-        chanIndex++;
-    }
+    //     chanIndex++;
+    // }
 }
 
 void PluginEditor::resized()

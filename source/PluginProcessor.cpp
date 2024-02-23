@@ -39,14 +39,14 @@ PluginProcessor::PluginProcessor()
         mOscBridgeChannels[static_cast<std::size_t> (i)]->state().setMuted (muted);
     }
 
-    // auto globalState = parameters.state;
-    // mGlobalStateListener = std::make_shared<LambdaStateListener> (globalState);
-
-    // setStateChangeCallbacks();
-    // updateListenerStates();
-
     // Register all channels with the OSCBridge manager
     mOscBridgeManager = std::make_shared<birdhouse::OSCBridgeManager> (mOscBridgeChannels);
+
+    // Set up listeners for the state changes
+    mGlobalStateListener = std::make_shared<LambdaStateListener> (parameters.state);
+
+    setStateChangeCallbacks();
+    updateListenerStates();
 }
 
 PluginProcessor::~PluginProcessor()
@@ -131,17 +131,24 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     // Set default values for each channel
     auto defaultPort = 6666;
+    tryConnect (defaultPort);
+}
+
+void PluginProcessor::tryConnect (auto port)
+{
     mOscBridgeManager->stopListening();
-    auto connectionResult = mOscBridgeManager->startListening (defaultPort);
-    juce::Logger::writeToLog ("Connection result: " + juce::String (static_cast<int> (connectionResult)));
+    auto connectionResult = mOscBridgeManager->startListening (port);
+    DBG ("Connection result: " + juce::String (static_cast<int> (connectionResult)));
     if (static_cast<bool> (connectionResult))
     {
-        juce::Logger::writeToLog ("Connected to port " + juce::String (defaultPort));
+        DBG ("Connected to port " + juce::String (port));
     }
     else
     {
-        juce::Logger::writeToLog ("Failed to connect to port " + juce::String (defaultPort));
+        DBG ("Failed to connect to port " + juce::String (port));
     }
+
+    parameters.state.setProperty ("ConnectionStatus", connectionResult, nullptr);
 }
 
 void PluginProcessor::releaseResources()
@@ -205,181 +212,109 @@ bool PluginProcessor::hasEditor() const
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
-{ // Use generic gui for editor for now
+{
     return new PluginEditor (*this);
-    // return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
 void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // std::unique_ptr<juce::XmlElement> xml (oscBridgeState.createXml());
-    // copyXmlToBinary (*xml, destData);
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());
+    DBG ("Getting state information from xml");
+    copyXmlToBinary (*xml, destData);
 }
 
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
 
-    // if (xmlState.get() != nullptr)
-    // {
-    //     if (xmlState->hasTagName (oscBridgeState.getType()))
-    //     {
-    //         auto stateFromXML = juce::ValueTree::fromXml (*xmlState);
-    //         if (stateFromXML.isValid())
-    //         {
-    //             oscBridgeState = juce::ValueTree::fromXml (*xmlState);
-    //             updateListenerStates();
-    //         }
-    //     }
-    // }
-    // else
-    // {
-    //     juce::Logger::writeToLog ("OSC State is null");
-    // }
+    if (xmlState.get() != nullptr)
+    {
+        if (xmlState->hasTagName (parameters.state.getType()))
+        {
+            DBG ("Setting state from xml");
+            parameters.state = juce::ValueTree::fromXml (*xmlState);
+        }
+    }
 }
 
-// juce::ValueTree PluginProcessor::createEmptyOSCState()
-// {
-//     juce::ValueTree state ("OSCState");
+// Set up lambda listeners to listen for  changes in the global state.
+// This is used to sync the values between gui and processor for parameters that are not registered as audio parameters
+void PluginProcessor::updateListenerStates()
+{
+    mGlobalStateListener->setState (parameters.state);
+}
 
-//     // Add global settings
-//     juce::ValueTree globalSettings ("GlobalSettings"),
-//         channelSettings ("ChannelSettings");
+void PluginProcessor::setStateChangeCallbacks()
+{
+    // Global state
+    mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
+        auto state = parameters.state;
 
-//     // In the global settings, we can add the following:
-//     // - Port
-//     // - Version
-//     //  - ConnectionStatus
-//     // globalSettings.setProperty ("Port", 6666, nullptr);
-//     globalSettings.setProperty ("ConnectionStatus", false, nullptr);
-//     globalSettings.setProperty ("Version", VERSION, nullptr);
+        // if (whatChanged == juce::Identifier ("Port"))
+        // {
+        //     tryConnect(state.getProperty ("Port", 6666);
+        //     return;
+        // }
 
-//     constexpr auto numChannels = 8;
+        if (whatChanged == juce::Identifier ("ConnectionStatus"))
+        {
+            auto fallbackValue = false;
+            auto newStatus = state.getProperty ("ConnectionStatus", fallbackValue);
+            juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
+            return;
+        }
 
-//     // Each channel has it's own node tree
-//     for (auto i = 0; i < numChannels; ++i)
-//     {
-//         // Channel state:
-//         // Path
-//         // inputMin
-//         // inputMax
-//         // outputMidiChannel
-//         // outputMidiNum
-//         // msgType
-//         // muted
-//         juce::ValueTree channel ("Channel");
-//         channel.setProperty ("Path", "/" + juce::String (i) + "/value", nullptr);
-//         channel.setProperty ("InputMin", 0.0f, nullptr);
-//         channel.setProperty ("InputMax", 1.0f, nullptr);
-//         channel.setProperty ("OutputMidiChannel", 1, nullptr);
-//         channel.setProperty ("OutputMidiNum", i + 48, nullptr);
-//         channel.setProperty ("MsgType", 0, nullptr);
-//         channel.setProperty ("Muted", false, nullptr);
+        // Iterate over all channels and check if their state has changed
+        for (auto chanNum = 1u; chanNum <= numBridgeChans; chanNum++)
+        {
+            const auto pathIdentifier = juce::Identifier (juce::String ("Path") + juce::String (chanNum));
+            const auto inMinIdentifier = juce::Identifier (juce::String ("InMin") + juce::String (chanNum));
+            const auto inMaxIdentifier = juce::Identifier (juce::String ("InMax") + juce::String (chanNum));
 
-//         channelSettings.addChild (channel, -1, nullptr);
-//     }
+            if (whatChanged == pathIdentifier || whatChanged == inMinIdentifier || whatChanged == inMaxIdentifier)
+            {
+                DBG ("State changed: " + whatChanged.toString() + " " + state.getType().toString() + " chan" + juce::String (chanNum));
+                auto pathFallbackValue = juce::String ("/" + juce::String (chanNum) + "/value");
+                auto newPath = state.getProperty (pathIdentifier, pathFallbackValue);
+                auto newInMin = state.getProperty (inMinIdentifier, 0.0f);
+                auto newInMax = state.getProperty (inMaxIdentifier, 1.0f);
 
-//     state.addChild (globalSettings, -1, nullptr);
-//     state.addChild (channelSettings, -1, nullptr);
+                mOscBridgeChannels[chanNum - 1]->state().setPath (newPath);
+                mOscBridgeChannels[chanNum - 1]->state().setInputMin (newInMin);
+                mOscBridgeChannels[chanNum - 1]->state().setInputMax (newInMax);
+            }
+        }
+    });
+}
 
-//     return state;
-// }
-
-// void PluginProcessor::updateListenerStates()
-// {
-//     // mGlobalStateListener->setState (oscBridgeState.getChildWithName ("GlobalSettings"));
-
-//     // auto chanNum = 0;
-//     // for (auto& listener : mChanListeners)
-//     // {
-//     //     listener->setState (oscBridgeState.getChildWithName ("ChannelSettings").getChild (chanNum++));
-//     // }
-// }
-
-// void PluginProcessor::setStateChangeCallbacks()
-// {
-//     // Set up channel listeners
-//     // auto i = 0u;
-//     // for (auto& chanListener : mChanListeners)
-//     // {
-//     //     // Set defualt callback for state changes in properties
-//     //     chanListener->setChangedCallback ([this, i] (auto whatChanged) {
-//     //         auto chanState = oscBridgeState.getChildWithName ("ChannelSettings").getChild (static_cast<int> (i));
-
-//     //         if (whatChanged == juce::Identifier ("Path"))
-//     //         {
-//     //             auto newPath = chanState.getProperty ("Path");
-//     //             mOscBridgeChannels[i]->state().setPath (newPath);
-//     //         }
-//     //     });
-
-//     //     i++;
-//     // }
-
-//     // Global state
-//     // mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
-//     //     auto globalSettings = oscBridgeState.getChildWithName ("GlobalSettings");
-
-//     //     if (globalSettings.isValid())
-//     //     {
-//     //         if (whatChanged == juce::Identifier ("Port"))
-//     //         {
-//     //             auto newPort = globalSettings.getProperty ("Port", 8000);
-//     //             juce::Logger::writeToLog ("Changing port");
-
-//     //             mOscBridgeManager->stopListening();
-//     //             auto connectionResult = mOscBridgeManager->startListening (newPort);
-
-//     //             globalSettings.setProperty ("ConnectionStatus", connectionResult, nullptr);
-//     //         }
-
-//     //         if (whatChanged == juce::Identifier ("ConnectionStatus"))
-//     //         {
-//     //             auto newStatus = globalSettings.getProperty ("ConnectionStatus", false);
-//     //             juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
-//     //         }
-//     //     }
-//     //     else
-//     //     {
-//     //         juce::Logger::writeToLog ("Global settings not valid");
-//     //     }
-//     // });
-// }
-
-// Get all parameters from the apvts and update the channels accordingly
+// Update internal state from audio parameters.
+// This gets all parameters from the apvts and updates the channels accordingly.
 void PluginProcessor::updateChannelsFromParams()
 {
     juce::Logger::writeToLog ("Updating channels from parameters");
     for (auto chanNum = 1; chanNum <= numBridgeChans; chanNum++)
     {
         // Identifiers
-        // const auto inMinParamID = juce::String ("InMin") + juce::String (chanNum);
-        // const auto inMaxParamID = juce::String ("InMax") + juce::String (chanNum);
         const auto midiChanParamID = juce::String ("MidiChan") + juce::String (chanNum);
         const auto midiNumParamID = juce::String ("MidiNum") + juce::String (chanNum);
         const auto msgTypeParamID = juce::String ("MsgType") + juce::String (chanNum);
         const auto mutedParamID = juce::String ("Muted") + juce::String (chanNum);
 
         // Params
-        // const auto inMinParam = parameters.getParameter (inMinParamID);
-        // const auto inMaxParam = parameters.getParameter (inMaxParamID);
         const auto midiChanParam = parameters.getParameter (midiChanParamID);
         const auto midiNumParam = parameters.getParameter (midiNumParamID);
         const auto msgTypeParam = parameters.getParameter (msgTypeParamID);
         const auto mutedParam = parameters.getParameter (mutedParamID);
 
         // Param Values
-        // const auto inMin = static_cast<juce::AudioParameterFloat*> (inMinParam)->get();
-        // const auto inMax = static_cast<juce::AudioParameterFloat*> (inMaxParam)->get();
         const auto midiChan = static_cast<juce::AudioParameterInt*> (midiChanParam)->get();
         const auto midiNum = static_cast<juce::AudioParameterInt*> (midiNumParam)->get();
         const auto msgType = static_cast<juce::AudioParameterInt*> (msgTypeParam)->get();
         const auto muted = static_cast<juce::AudioParameterBool*> (mutedParam)->get();
 
         const auto chan = mOscBridgeChannels[static_cast<std::size_t> (chanNum - 1)];
-        // chan->state().setInputMin (inMin);
-        // chan->state().setInputMax (inMax);
         chan->state().setOutputMidiChannel (static_cast<int> (midiChan));
         chan->state().setOutputMidiNum (static_cast<int> (midiNum));
         chan->state().setOutputType (static_cast<birdhouse::MsgType> (static_cast<int> (msgType)));
@@ -389,7 +324,12 @@ void PluginProcessor::updateChannelsFromParams()
 
 void PluginProcessor::parameterChanged (const juce::String& parameterID, float newValue)
 {
-    juce::Logger::writeToLog ("Parameter changed: " + parameterID + " = " + juce::String (newValue));
+    DBG ("Parameter changed: " + parameterID + " = " + juce::String (newValue));
+
+    if (parameterID == "Port")
+    {
+        tryConnect (newValue);
+    }
     mParametersNeedUpdating = true;
 }
 //==============================================================================

@@ -197,22 +197,23 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Create temporary buffer for MIDI messages to allow double-buffering
     juce::MidiBuffer tmpMidi;
 
-    // Check if any of the channels have had changes in midi, if so, append note off to all channels
-    // This is to prevent stuck notes
-    for (auto& chan : mOscBridgeChannels)
+    for (auto sampleNum = 0; sampleNum < buffer.getNumSamples(); ++sampleNum)
     {
-        if (chan->state().midiChanged())
+        // Check if any of the channels have had changes in midi, if so, append note off to all channels
+        // This is to prevent stuck notes
+        for (auto& chan : mOscBridgeChannels)
         {
-            tmpMidi.addEvent (juce::MidiMessage::allNotesOff (chan->state().outChan()), 0);
-            chan->state().resetMidiFlag();
+            if (chan->state().midiChanged())
+            {
+                tmpMidi.addEvent (juce::MidiMessage::allNotesOff (chan->state().outChan()), sampleNum);
+                chan->state().resetMidiFlag();
+            }
+
+            chan->appendMessagesTo (tmpMidi, sampleNum);
         }
     }
 
-    for (auto& chan : mOscBridgeChannels)
-    {
-        chan->appendMessagesTo (tmpMidi);
-    }
-
+    // Replace the original midiMessages with the processed ones
     midiMessages.swapWith (tmpMidi);
 }
 

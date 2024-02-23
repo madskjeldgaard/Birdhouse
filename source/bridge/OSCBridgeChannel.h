@@ -107,17 +107,18 @@ namespace birdhouse
         // This is called by the OSC part of the plugin
         void addMidiMessage (const juce::MidiMessage& message, int timeStamp = 0)
         {
-            juce::Logger::writeToLog ("Adding MIDI message to buffer");
+            // FIXME: Without this lock, bad memory access segfaults will happen because the OSC thread is running realtime and writing to the midi buffer
+            DBG ("Adding MIDI message to buffer");
             const juce::ScopedLock lock (mCriticalSection); // Lock while reading/modifying
             mInternalBuffer.addEvent (message, timeStamp);
         }
 
         // This is called at the start of each processBlock to move messages to the processBlock's midi buffer
-        void appendMessagesTo (juce::MidiBuffer& processBlockBuffer)
+        void appendMessagesTo (juce::MidiBuffer& processBlockBuffer, int sampleNum = 0)
         {
-            // FIXME: This causes bad memory access
+            // FIXME: Without this lock, bad memory access segfaults will happen because the OSC thread is running realtime and writing to the midi buffer
             const juce::ScopedLock lock (mCriticalSection); // Lock while reading/modifying
-            processBlockBuffer.addEvents (mInternalBuffer, 0, -1, 0);
+            processBlockBuffer.addEvents (mInternalBuffer, sampleNum, -1, 0);
 
             mInternalBuffer.clear();
         }

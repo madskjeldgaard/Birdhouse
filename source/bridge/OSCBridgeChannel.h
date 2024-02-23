@@ -165,18 +165,21 @@ namespace birdhouse
         void setOutputMidiChannel (auto newOutputMidiChannel)
         {
             DBG ("Changing output MIDI channel from " + juce::String (mOutputMidiChan) + " to " + juce::String (newOutputMidiChannel) + " for path " + mPath);
+            mMidiChanged.store (true);
             mOutputMidiChan = newOutputMidiChannel;
         }
 
         void setOutputMidiNum (auto newOutputNum)
         {
             DBG ("Changing output MIDI number from " + juce::String (mOutMidiNum) + " to " + juce::String (newOutputNum) + " for path " + mPath);
+            mMidiChanged.store (true);
             mOutMidiNum = newOutputNum;
         }
 
         void setOutputType (auto newOutputType)
         {
             DBG ("Changing output type from " + juce::String (mMsgType) + " to " + juce::String (newOutputType) + " for path " + mPath);
+            mMidiChanged.store (true);
             mMsgType = newOutputType;
         }
 
@@ -235,19 +238,18 @@ namespace birdhouse
             return mPath;
         }
 
-        inline auto& getLastValueAtomic() { return mRawValue; }
-        inline auto& getLastValueVersionAtomic() { return mLastValueVersion; }
-        inline void incrementLastValueVersion()
+        inline auto midiChanged() const { return mMidiChanged.load(); }
+
+        void resetMidiFlag()
         {
-            DBG ("Incrementing last value version for path " + mPath);
-            mLastValueVersion++;
+            mMidiChanged.store (false);
         }
 
     private:
         juce::String mPath { "" };
+        std::atomic<bool> mMidiChanged { false };
         std::atomic<float> mInputMin { 0.f }, mInputMax { 1.0f };
         std::atomic<float> mRawValue { 0.f };
-        std::atomic<int> mLastValueVersion { 0 };
         int mOutputMidiChan { 1 }, mOutMidiNum { 48 };
         MsgType mMsgType { MsgType::MidiCC };
         bool mMuted { false };

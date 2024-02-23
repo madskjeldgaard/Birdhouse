@@ -130,9 +130,9 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // Set default values for each channel
     // if (!isConnected())
     // {
-        auto defaultPort = parameters.getParameter ("Port");
-        auto defaultPortVal = static_cast<juce::AudioParameterInt*> (defaultPort)->get();
-        tryConnect (defaultPortVal);
+    auto defaultPort = parameters.getParameter ("Port");
+    auto defaultPortVal = static_cast<juce::AudioParameterInt*> (defaultPort)->get();
+    tryConnect (defaultPortVal);
     // }
 }
 
@@ -197,6 +197,17 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Create temporary buffer for MIDI messages to allow double-buffering
     juce::MidiBuffer tmpMidi;
 
+    // Check if any of the channels have had changes in midi, if so, append note off to all channels
+    // This is to prevent stuck notes
+    for (auto& chan : mOscBridgeChannels)
+    {
+        if (chan->state().midiChanged())
+        {
+            tmpMidi.addEvent (juce::MidiMessage::allNotesOff (chan->state().outChan()), 0);
+            chan->state().resetMidiFlag();
+        }
+    }
+
     for (auto& chan : mOscBridgeChannels)
     {
         chan->appendMessagesTo (tmpMidi);
@@ -236,7 +247,6 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
             DBG ("Setting state from xml");
             parameters.state = juce::ValueTree::fromXml (*xmlState);
             updateListenerStates();
-
         }
     }
 }

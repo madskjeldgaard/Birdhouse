@@ -33,15 +33,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     titleLabel.setVisible (true);
     addAndMakeVisible (titleLabel);
 
-    // Get state
-    // auto state = processorRef.oscBridgeState;
-
-    // if (!state.isValid())
-    // {
-    //     juce::Logger::writeToLog ("State is invalid, using default");
-    //     state = processorRef.createEmptyOSCState();
-    // }
-
     // Set up each channel
     for (auto chanNum = 1u; chanNum <= numBridgeChans; chanNum++)
     {
@@ -94,9 +85,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
     // // Focus lost -> update state
     // portEditor.onFocusLost = [this] {
-    //     auto newport = portEditor.getText().getIntValue();
-    //     auto globalSettings = processorRef.oscBridgeState.getChildWithName ("GlobalSettings");
-    //     globalSettings.setProperty ("Port", newport, nullptr);
+
     // };
 
     addAndMakeVisible (portEditor);
@@ -116,7 +105,8 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
     connectionStatusLabel.setFont (labelFont);
     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
-    connectionStatusLabel.setText ("Disconnected", juce::dontSendNotification);
+    connectionStatusLabel.setText (processorRef.isConnected() ? "Connected" : "Disconnected",
+        juce::dontSendNotification);
     connectionStatusLabel.setJustificationType (juce::Justification::left);
 
     addAndMakeVisible (connectionStatusLabel);
@@ -139,7 +129,7 @@ void PluginEditor::paint (juce::Graphics& g)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     // Update connection status
-    auto connectionStatus = processorRef.parameters.state.getProperty ("ConnectionStatus", false);
+    auto connectionStatus = processorRef.isConnected();
 
     if (connectionStatus)
     {
@@ -157,15 +147,15 @@ void PluginEditor::paint (juce::Graphics& g)
 
     // Update the activity indicators
 
-    // auto chanIndex = 0u;
-    // for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
-    // {
-    //     // auto& chan = *processorRef.getChannel (chanIndex);
+    auto chanIndex = 0u;
+    for (auto& oscBridgeChannelEditor : oscBridgeChannelEditors)
+    {
+        auto& chan = *processorRef.getChannel (chanIndex);
 
-    //     // oscBridgeChannelEditor->updateActivityForChan (processorChan.state());
+        oscBridgeChannelEditor->updateActivityForChan (chan.state());
 
-    //     chanIndex++;
-    // }
+        chanIndex++;
+    }
 }
 
 void PluginEditor::resized()

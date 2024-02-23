@@ -13,7 +13,7 @@ public:
     {
         values.assign (maxValueCount, 0.0f);
         setBackgroundColour (BirdHouse::Colours::bgDark);
-        setOutlineColour (findColour(juce::TextEditor::outlineColourId));
+        setOutlineColour (findColour (juce::TextEditor::outlineColourId));
         setValueColour (BirdHouse::Colours::blue);
 
         startTimerHz (30); // Start the timer with a frequency of 30 Hz
@@ -43,7 +43,7 @@ public:
     {
         auto outlineSize = 1.0f;
         auto bounds = getLocalBounds().toFloat();
-        auto widthPerValue = bounds.getWidth() / maxValueCount;
+        auto widthPerValue = (bounds.getWidth() / maxValueCount);
 
         // Draw background
         g.fillAll (backgroundColour);
@@ -56,9 +56,7 @@ public:
             auto valueY = bounds.getBottom() - valueHeight;
             juce::Rectangle<float> valueRect (valueX, valueY, widthPerValue, valueHeight);
 
-            // juce::ColourGradient colorGradient (BirdHouse::Colours::magenta, valueRect.getX(), valueRect.getCentreY(), BirdHouse::Colours::yellow, valueRect.getRight(), valueRect.getCentreY(), false);
             g.setColour (valueColour);
-            // g.setGradientFill (colorGradient);
             g.fillRect (valueRect);
         }
 

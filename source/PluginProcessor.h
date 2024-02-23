@@ -47,9 +47,15 @@ public:
 
     // OSC
     void tryConnect (auto port);
+    auto& getChannel (std::size_t index) const { return mOscBridgeChannels.at (index); }
 
-        // State
-        void getStateInformation (juce::MemoryBlock& destData) override;
+    inline auto isConnected()
+    {
+        return mConnected.load();
+    }
+
+    // State
+    void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     void updateListenerStates();
     void setStateChangeCallbacks();
@@ -61,6 +67,7 @@ public:
     void parameterChanged (const juce::String& parameterID, float newValue) override;
 
 private:
+    std::atomic<bool> mConnected = false;
     std::vector<std::shared_ptr<birdhouse::OSCBridgeChannel>> mOscBridgeChannels;
     std::shared_ptr<birdhouse::OSCBridgeManager> mOscBridgeManager;
 

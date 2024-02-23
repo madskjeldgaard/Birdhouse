@@ -92,16 +92,7 @@ public:
 
     void updateActivityForChan (auto& chan)
     {
-        auto version = chan.getLastValueVersionAtomic().load();
-        auto& valueAtomic = chan.getLastValueAtomic();
-
-        if (version != lastValueVersion)
-        {
-            // New data
-            activityIndicator.addValue (valueAtomic.load());
-            lastValueVersion.store (version, std::memory_order_relaxed);
-            juce::Logger::writeToLog ("new act");
-        }
+        activityIndicator.addValue (chan.getNormalizedValue());
     }
 
     void addActivity (auto newValue)
@@ -148,8 +139,6 @@ private:
     ActivityIndicator<64> activityIndicator;
 
     juce::ValueTree oscBridgeState;
-
-    std::atomic<int> lastValueVersion { -1 };
 
     // Attachments
     std::vector<std::unique_ptr<birdhouse::ITextEditorAttachment>> textEditorAttachments {};

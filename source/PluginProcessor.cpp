@@ -127,17 +127,19 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 
-    juce::Logger::writeToLog ("Preparing to play");
-
     // Set default values for each channel
-    auto defaultPort = 6666;
-    tryConnect (defaultPort);
+    // if (!isConnected())
+    // {
+        auto defaultPort = parameters.getParameter ("Port");
+        auto defaultPortVal = static_cast<juce::AudioParameterInt*> (defaultPort)->get();
+        tryConnect (defaultPortVal);
+    // }
 }
 
 void PluginProcessor::tryConnect (auto port)
 {
     mOscBridgeManager->stopListening();
-    auto connectionResult = mOscBridgeManager->startListening (port);
+    auto connectionResult = mOscBridgeManager->startListening (static_cast<int> (port));
     DBG ("Connection result: " + juce::String (static_cast<int> (connectionResult)));
     if (static_cast<bool> (connectionResult))
     {
@@ -148,7 +150,7 @@ void PluginProcessor::tryConnect (auto port)
         DBG ("Failed to connect to port " + juce::String (port));
     }
 
-    parameters.state.setProperty ("ConnectionStatus", connectionResult, nullptr);
+    mConnected = static_cast<bool> (connectionResult);
 }
 
 void PluginProcessor::releaseResources()
@@ -156,8 +158,6 @@ void PluginProcessor::releaseResources()
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
     mOscBridgeManager->stopListening();
-
-    juce::Logger::writeToLog ("Releasing resources");
 }
 
 bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -235,6 +235,8 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
         {
             DBG ("Setting state from xml");
             parameters.state = juce::ValueTree::fromXml (*xmlState);
+            updateListenerStates();
+
         }
     }
 }
@@ -248,9 +250,12 @@ void PluginProcessor::updateListenerStates()
 
 void PluginProcessor::setStateChangeCallbacks()
 {
+    DBG ("Setting state change callbacks");
     // Global state
     mGlobalStateListener->setChangedCallback ([this] (auto whatChanged) {
         auto state = parameters.state;
+
+        DBG ("State changed: " + whatChanged.toString() + " " + state.getType().toString());
 
         // if (whatChanged == juce::Identifier ("Port"))
         // {

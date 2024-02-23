@@ -186,19 +186,19 @@ namespace birdhouse
             mMuted = shouldBeMuted;
         }
 
-        void setRawValue (auto newValue)
+        inline void setRawValue (auto newValue)
         {
             DBG ("Changing raw value from " + juce::String (mRawValue.load()) + " to " + juce::String (newValue) + " for path " + mPath);
             mRawValue = newValue;
         }
-        auto getRawValue() const { return mRawValue.load(); }
+        inline auto getRawValue() const { return mRawValue.load(); }
 
-        auto normalizeValue (auto rawValue) -> auto
+        inline auto normalizeValue (auto rawValue) -> auto
         {
             return juce::jmap (rawValue, mInputMin.load(), mInputMax.load(), 0.0f, 1.0f);
         }
 
-        auto getNormalizedValue() { return normalizeValue (mRawValue.load()); }
+        inline auto getNormalizedValue() { return normalizeValue (mRawValue.load()); }
 
         auto muted() const
         {

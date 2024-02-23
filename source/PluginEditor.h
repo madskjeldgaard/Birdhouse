@@ -3,6 +3,7 @@
 #include "BinaryData.h"
 #include "PluginProcessor.h"
 #include "bridge/OSCActivityListener.h"
+#include "gui/AboutComponent.h"
 #include "gui/BirdHouseLookAndFeel.h"
 #include "gui/OSCBridgeChannelEditor.h"
 #include "gui/OSCBridgeChannelLabels.h"
@@ -29,14 +30,18 @@ private:
     std::unique_ptr<OSCBridgeChannelLabels> oscBridgeChannelLabels;
 
     // Link to help / info
-    juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+    // juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
+
+    // Link to help / info
+    AboutComponent aboutComponent;
+    juce::TextButton aboutButton { "?" };
 
     // Port
     juce::TextEditor portEditor;
     // Parameter attachment
-    std::unique_ptr<birdhouse::TextEditorAttachment<int>> portAttachment{
+    std::unique_ptr<birdhouse::TextEditorAttachment<int>> portAttachment {
         std::make_unique<birdhouse::TextEditorAttachment<int>> (processorRef.parameters, portEditor, nullptr)
-  };
+    };
 
     // GUI for each channel
     std::vector<std::unique_ptr<OSCBridgeChannelEditor>> oscBridgeChannelEditors;

@@ -7,14 +7,20 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     lookAndFeel = std::make_unique<BirdHouse::BirdHouseLookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel (lookAndFeel.get());
 
-    auto defaultFontSize = 24.0f;
+    auto defaultFontSize = 20.0f;
 
     // Link
-    hyperlinkButton.setButtonText ("(?)");
-    hyperlinkButton.setFont (juce::Font (defaultFontSize, juce::Font::plain), false);
-    hyperlinkButton.setColour (juce::HyperlinkButton::textColourId, BirdHouse::Colours::magenta);
-    hyperlinkButton.setJustificationType (juce::Justification::right);
-    addAndMakeVisible (hyperlinkButton);
+    aboutButton.setButtonText ("(?)");
+    aboutButton.onClick = [&] {
+        showAboutWindow();
+    };
+    aboutButton.setColour (juce::TextButton::textColourOnId, BirdHouse::Colours::magenta);
+    aboutButton.setColour (juce::TextButton::textColourOffId, BirdHouse::Colours::magenta);
+    aboutButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
+    aboutButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::bg);
+    // aboutButton.setColour (juce::TextButton::outlineColourId, BirdHouse::Colours::magenta);
+    // aboutButton.setColour (juce::HyperlinkButton::hoveredTextColourId, BirdHouse::Colours::magenta);
+    addAndMakeVisible (aboutButton);
 
     // Labels
     auto labelFont = juce::Font (defaultFontSize, juce::Font::bold);
@@ -25,13 +31,13 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     addAndMakeVisible (*oscBridgeChannelLabels);
 
     // Set font for title
-    auto titleFont = juce::Font (defaultFontSize * 1.33f, juce::Font::bold);
-    titleLabel.setFont (titleFont);
-    titleLabel.setText ("BirdHouse. An OSC to MIDI bridge. v" VERSION ".", juce::dontSendNotification);
-    titleLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
-    titleLabel.setJustificationType (juce::Justification::centred);
-    titleLabel.setVisible (true);
-    addAndMakeVisible (titleLabel);
+    // auto titleFont = juce::Font (defaultFontSize * 1.33f, juce::Font::bold);
+    // titleLabel.setFont (titleFont);
+    // titleLabel.setText ("BirdHouse", juce::dontSendNotification);
+    // titleLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
+    // titleLabel.setJustificationType (juce::Justification::centred);
+    // titleLabel.setVisible (true);
+    // addAndMakeVisible (titleLabel);
 
     // Set up each channel
     for (auto chanNum = 1u; chanNum <= numBridgeChans; chanNum++)
@@ -94,14 +100,15 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portLabel.setFont (labelFont);
     portLabel.setColour (juce::Label::textColourId, labelColour);
     portLabel.setText ("Port", juce::dontSendNotification);
+    portLabel.setJustificationType (juce::Justification::left);
     addAndMakeVisible (portLabel);
 
     // Connection status
     connectionStatusTitleLabel.setFont (labelFont);
     connectionStatusTitleLabel.setColour (juce::Label::textColourId, labelColour);
     connectionStatusTitleLabel.setText ("Status:", juce::dontSendNotification);
-    connectionStatusTitleLabel.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (connectionStatusTitleLabel);
+    connectionStatusTitleLabel.setJustificationType (juce::Justification::left);
+    // addAndMakeVisible (connectionStatusTitleLabel);
 
     connectionStatusLabel.setFont (labelFont);
     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
@@ -113,10 +120,10 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (1000, 500);
+    setSize (1000, 400);
 
     // Allow resizing
-    setResizable (true, false);
+    setResizable (true, true);
 }
 
 PluginEditor::~PluginEditor()
@@ -161,11 +168,11 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto area = getLocalBounds();
-    auto totalChannels = oscBridgeChannelEditors.size() + 4; // Including title, port, and hyperlink in count
+    auto totalChannels = oscBridgeChannelEditors.size() + 2.5f; // Including title, port, and hyperlink in count
     auto itemHeight = static_cast<int> (static_cast<float> (area.getHeight()) / totalChannels);
 
     // Title area at the top
-    titleLabel.setBounds (area.removeFromTop (itemHeight));
+    // titleLabel.setBounds (area.removeFromTop (itemHeight));
 
     // Adjusting for the channels' labels and editors
     oscBridgeChannelLabels->setBounds (area.removeFromTop (itemHeight));
@@ -179,20 +186,24 @@ void PluginEditor::resized()
     auto bottomArea = area.removeFromBottom (itemHeight); // Reserve space at the bottom
 
     // Split the bottom area into three parts
-    auto portLabelWidth = static_cast<int> (bottomArea.getWidth() * 0.1f); // Adjust the ratio as needed
-    auto portEditorWidth = static_cast<int> (bottomArea.getWidth() * (1.0f / 6.0f)); // 1/7th of the width
-    auto hyperlinkWidth = static_cast<int> (bottomArea.getWidth() * 0.2f); // Adjust as needed
+    auto portEditorWidth = static_cast<int> (bottomArea.getWidth() * (1.0f / 12.0f));
+
+    // Pad from left
+    bottomArea.removeFromRight (static_cast<int> (getLocalBounds().getWidth() / 16.0f));
+    bottomArea.removeFromLeft (static_cast<int> (getLocalBounds().getWidth() / 16.0f));
 
     // Place portLabel on the left side of the bottom area
-    portLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));
+    portLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth));
 
     // Place portEditor next to portLabel
     portEditor.setBounds (bottomArea.removeFromLeft (portEditorWidth));
 
     // Connection status
-    connectionStatusTitleLabel.setBounds (bottomArea.removeFromLeft (portLabelWidth));
-    connectionStatusLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth));
+    connectionStatusTitleLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth * 2));
+    connectionStatusLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth * 2));
 
     // Place hyperlinkButton on the far right of the bottom area
-    hyperlinkButton.setBounds (bottomArea.removeFromRight (hyperlinkWidth));
+    auto hyperlinkWidth = static_cast<int> (portEditorWidth);
+    bottomArea.removeFromLeft (portEditorWidth * 3 + hyperlinkWidth);
+    aboutButton.setBounds (bottomArea.removeFromLeft (hyperlinkWidth));
 }

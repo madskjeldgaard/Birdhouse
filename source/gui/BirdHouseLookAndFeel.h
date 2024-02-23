@@ -29,7 +29,7 @@ namespace BirdHouse
             auto outline = Colours::fg.withAlpha (0.5f);
 
             // Set default colours for components
-            setColour (juce::Slider::backgroundColourId, Colours::bgDark);
+            setColour (juce::Slider::backgroundColourId, Colours::bg);
             setColour (juce::Slider::thumbColourId, Colours::blue);
             setColour (juce::Slider::trackColourId, Colours::fg);
             setColour (juce::Label::textColourId, Colours::fg);
@@ -42,8 +42,9 @@ namespace BirdHouse
             setColour (juce::ComboBox::backgroundColourId, Colours::bg);
             setColour (juce::ComboBox::textColourId, Colours::fg);
             setColour (juce::ComboBox::outlineColourId, outline);
-            setColour (juce::PopupMenu::backgroundColourId, Colours::bgDark);
+            setColour (juce::PopupMenu::backgroundColourId, Colours::bg);
             setColour (juce::PopupMenu::textColourId, Colours::blue);
+
             setColour (juce::ResizableWindow::backgroundColourId, Colours::bg);
             setColour (juce::TextEditor::backgroundColourId, Colours::bgDark);
             setColour (juce::TextEditor::textColourId, Colours::fg);

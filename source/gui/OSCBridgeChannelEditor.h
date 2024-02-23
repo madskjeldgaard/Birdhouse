@@ -109,6 +109,11 @@ public:
         auto width = area.getWidth() / numElements;
 
         auto titleWidth = width / 2;
+        auto muteWidth = width / 2;
+
+        // Readjust total width to account for the title and mute button
+        width = (area.getWidth() - titleWidth - muteWidth) / (numElements - 2);
+
         titleLabel.setBounds (area.removeFromLeft (titleWidth));
         pathEditor.setBounds (area.removeFromLeft (width));
         inputMinEditor.setBounds (area.removeFromLeft (width));
@@ -117,7 +122,7 @@ public:
         outputMidiChannelEditor.setBounds (area.removeFromLeft (width));
         outputNumEditor.setBounds (area.removeFromLeft (width));
         outputMsgTypeComboBox.setBounds (area.removeFromLeft (width));
-        muteButton.setBounds (area.removeFromLeft (width));
+        muteButton.setBounds (area.removeFromLeft (titleWidth));
     }
 
     auto& getActivityIndicator() { return activityIndicator; }
@@ -134,7 +139,7 @@ private:
     juce::TextEditor outputMidiChannelEditor;
     juce::TextEditor outputNumEditor;
     juce::ComboBox outputMsgTypeComboBox;
-    juce::TextButton muteButton { "Mute" };
+    juce::TextButton muteButton { "M" };
 
     ActivityIndicator<64> activityIndicator;
 
@@ -318,11 +323,11 @@ private:
         addAndMakeVisible (muteButton);
         muteButton.setToggleable (true);
         muteButton.setClickingTogglesState (true);
-        muteButton.setButtonText ("Mute");
+        muteButton.setButtonText ("mute");
         muteButton.setColour (juce::TextButton::textColourOffId, BirdHouse::Colours::fg);
         muteButton.setColour (juce::TextButton::textColourOnId, BirdHouse::Colours::bg);
         muteButton.setColour (juce::TextButton::buttonColourId, BirdHouse::Colours::bg);
-        muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::red);
+        muteButton.setColour (juce::TextButton::buttonOnColourId, BirdHouse::Colours::yellow);
 
         // Set text justification
         auto justification = juce::Justification::left;

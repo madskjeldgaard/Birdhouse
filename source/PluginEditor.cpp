@@ -78,7 +78,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     auto portParam = processorRef.parameters.getParameter ("Port");
     auto port = static_cast<juce::AudioParameterInt*> (portParam)->get();
     portEditor.setFont (juce::Font (defaultFontSize, juce::Font::plain));
-    portEditor.setJustification (juce::Justification::left);
+    portEditor.setJustification (juce::Justification::centred);
     portEditor.setText (juce::String (port));
     portEditor.setInputRestrictions (5, "1234567890");
 
@@ -100,7 +100,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     portLabel.setFont (labelFont);
     portLabel.setColour (juce::Label::textColourId, labelColour);
     portLabel.setText ("Port", juce::dontSendNotification);
-    portLabel.setJustificationType (juce::Justification::left);
+    portLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (portLabel);
 
     // Connection status
@@ -114,7 +114,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     connectionStatusLabel.setColour (juce::Label::textColourId, BirdHouse::Colours::fg);
     connectionStatusLabel.setText (processorRef.isConnected() ? "Connected" : "Disconnected",
         juce::dontSendNotification);
-    connectionStatusLabel.setJustificationType (juce::Justification::left);
+    connectionStatusLabel.setJustificationType (juce::Justification::centred);
 
     addAndMakeVisible (connectionStatusLabel);
 
@@ -189,8 +189,8 @@ void PluginEditor::resized()
     auto portEditorWidth = static_cast<int> (bottomArea.getWidth() * (1.0f / 12.0f));
 
     // Pad from left
-    bottomArea.removeFromRight (static_cast<int> (getLocalBounds().getWidth() / 16.0f));
-    bottomArea.removeFromLeft (static_cast<int> (getLocalBounds().getWidth() / 16.0f));
+    bottomArea.removeFromRight (static_cast<int> (getLocalBounds().getWidth() / 10.0f));
+    // bottomArea.removeFromLeft (static_cast<int> (getLocalBounds().getWidth() / 8.0f));
 
     // Place portLabel on the left side of the bottom area
     portLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth));
@@ -202,8 +202,11 @@ void PluginEditor::resized()
     connectionStatusTitleLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth * 2));
     connectionStatusLabel.setBounds (bottomArea.removeFromLeft (portEditorWidth * 2));
 
+    // Pad
+    bottomArea.removeFromLeft (static_cast<int> (portEditorWidth * 1.5f));
+
     // Place hyperlinkButton on the far right of the bottom area
-    auto hyperlinkWidth = static_cast<int> (portEditorWidth);
-    bottomArea.removeFromLeft (portEditorWidth * 3 + hyperlinkWidth);
-    aboutButton.setBounds (bottomArea.removeFromLeft (hyperlinkWidth));
+    auto hyperlinkWidth = static_cast<int> (portEditorWidth * 0.5f);
+    // bottomArea.removeFromLeft (portEditorWidth * 2);
+    aboutButton.setBounds (bottomArea.removeFromRight (hyperlinkWidth));
 }

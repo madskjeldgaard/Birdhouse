@@ -80,18 +80,28 @@ public:
         // Lay out with equal width from left to right
         auto area = getLocalBounds();
         auto width = area.getWidth() / NumLabels;
+        auto titleWidth = width / 2;
+        auto muteWidth = width / 2;
+
+        // Readjust total width to account for the title and mute button
+        width = (area.getWidth() - titleWidth - muteWidth) / (NumLabels - 2);
 
         auto labelNum = 0;
         for (auto& label : labels)
         {
             if (labelNum == TitleLabel)
             {
-                label->setBounds (area.removeFromLeft (width / 2));
+                label->setBounds (area.removeFromLeft (titleWidth));
+            }
+            else if (labelNum == Muted)
+            {
+                label->setBounds (area.removeFromLeft (muteWidth));
             }
             else
             {
                 label->setBounds (area.removeFromLeft (width));
             }
+
             labelNum++;
         }
     }

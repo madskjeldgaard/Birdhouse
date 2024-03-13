@@ -76,7 +76,12 @@ Configure:
 cmake -S . -B build
 ```
 
-Build:
+Build.
+
+This will automatically install the plugins on your system. 
+
+If you want the standalone, you should copy it manually.
+
 ```bash
 cmake --build build
 ```

@@ -19,9 +19,9 @@ env:
   DISPLAY: :0 # linux pluginval needs this
   CMAKE_BUILD_PARALLEL_LEVEL: 3 # Use up to 3 cpus to build juceaide, etc
   HOMEBREW_NO_INSTALL_CLEANUP: 1
-  IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
+  # IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
 
-# jobs are run in paralell on different machines
+# jobs are run in paralelautol on different machines
 # all steps run in series
 jobs:
   build_and_test:
@@ -59,28 +59,28 @@ jobs:
         sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.6 libc6-dev=2.35-0ubuntu3.6 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
         sudo /usr/bin/Xvfb $DISPLAY &
 
-    - name: Cache IPP (Windows)
-      if: runner.os == 'Windows'
-      id: cache-ipp
-      uses: actions/cache@v3
-      with:
-        key: ipp-v4
-        path: C:\Program Files (x86)\Intel
+    # - name: Cache IPP (Windows)
+    #   if: runner.os == 'Windows'
+    #   id: cache-ipp
+    #   uses: actions/cache@v3
+    #   with:
+    #     key: ipp-v4
+    #     path: C:\Program Files (x86)\Intel
 
-    - name: Install IPP (Windows)
-      if: (runner.os == 'Windows') && (steps.cache-ipp.outputs.cache-hit != 'true')
-      shell: bash
-      run: |
-        curl --output oneapi.exe https://registrationcenter-download.intel.com/akdlm/IRC_NAS/8d158661-ca8f-4e66-b5ea-3e0b3d00836a/w_ipp_oneapi_p_2021.10.1.15_offline.exe
-        ./oneapi.exe -s -x -f oneapi
-        ./oneapi/bootstrapper.exe -s -c --action install --components=intel.oneapi.win.ipp.devel --eula=accept -p=NEED_VS2022_INTEGRATION=1 --log-dir=.
+    # - name: Install IPP (Windows)
+    #   if: (runner.os == 'Windows') && (steps.cache-ipp.outputs.cache-hit != 'true')
+    #   shell: bash
+    #   run: |
+    #     curl --output oneapi.exe https://registrationcenter-download.intel.com/akdlm/IRC_NAS/8d158661-ca8f-4e66-b5ea-3e0b3d00836a/w_ipp_oneapi_p_2021.10.1.15_offline.exe
+    #     ./oneapi.exe -s -x -f oneapi
+    #     ./oneapi/bootstrapper.exe -s -c --action install --components=intel.oneapi.win.ipp.devel --eula=accept -p=NEED_VS2022_INTEGRATION=1 --log-dir=.
 
-    - name: Save IPP cache (even on CI fail)
-      if: runner.os == 'Windows' && (steps.cache-ipp.outputs.cache-hit != 'true')
-      uses: actions/cache/save@v3
-      with:
-        path: C:\Program Files (x86)\Intel
-        key: ipp-v4
+    # - name: Save IPP cache (even on CI fail)
+    #   if: runner.os == 'Windows' && (steps.cache-ipp.outputs.cache-hit != 'true')
+    #   uses: actions/cache/save@v3
+    #   with:
+    #     path: C:\Program Files (x86)\Intel
+    #     key: ipp-v4
 
     - name: Install Ninja (Windows)
       if: runner.os == 'Windows'

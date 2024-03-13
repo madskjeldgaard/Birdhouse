@@ -37,6 +37,8 @@ namespace birdhouse
                 case MsgType::MidiBend:
                     midiMessage = juce::MidiMessage::pitchWheel (outputMidiChannel, static_cast<int> (normalizedValue * 16383) - 8192);
                     break;
+                case MsgType::NumMsgTypes:
+                    break;
                 default:
                     break;
             }
@@ -152,33 +154,33 @@ namespace birdhouse
             DBG ("Changing path from " + mPath + " to " + newPath);
             mPath = newPath;
         }
-        void setInputMin (auto newFromMin)
+        void setInputMin (float newFromMin)
         {
             DBG ("Changing input min from " + juce::String (mInputMin.load()) + " to " + juce::String (newFromMin) + " for path " + mPath);
             mInputMin = newFromMin;
         }
 
-        void setInputMax (auto newFromMax)
+        void setInputMax (float newFromMax)
         {
             DBG ("Changing input max from " + juce::String (mInputMax.load()) + " to " + juce::String (newFromMax) + " for path " + mPath);
             mInputMax = newFromMax;
         }
 
-        void setOutputMidiChannel (auto newOutputMidiChannel)
+        void setOutputMidiChannel (int newOutputMidiChannel)
         {
             DBG ("Changing output MIDI channel from " + juce::String (mOutputMidiChan) + " to " + juce::String (newOutputMidiChannel) + " for path " + mPath);
             mMidiChanged.store (true);
             mOutputMidiChan = newOutputMidiChannel;
         }
 
-        void setOutputMidiNum (auto newOutputNum)
+        void setOutputMidiNum (int newOutputNum)
         {
             DBG ("Changing output MIDI number from " + juce::String (mOutMidiNum) + " to " + juce::String (newOutputNum) + " for path " + mPath);
             mMidiChanged.store (true);
             mOutMidiNum = newOutputNum;
         }
 
-        void setOutputType (auto newOutputType)
+        void setOutputType (MsgType newOutputType)
         {
             DBG ("Changing output type from " + juce::String (mMsgType) + " to " + juce::String (newOutputType) + " for path " + mPath);
             mMidiChanged.store (true);
@@ -191,14 +193,14 @@ namespace birdhouse
             mMuted = shouldBeMuted;
         }
 
-        inline void setRawValue (auto newValue)
+        inline void setRawValue (float newValue)
         {
             DBG ("Changing raw value from " + juce::String (mRawValue.load()) + " to " + juce::String (newValue) + " for path " + mPath);
             mRawValue = newValue;
         }
         inline auto getRawValue() const { return mRawValue.load(); }
 
-        inline auto normalizeValue (auto rawValue) -> auto
+        inline auto normalizeValue (float rawValue) -> auto
         {
             return juce::jmap (rawValue, mInputMin.load(), mInputMax.load(), 0.0f, 1.0f);
         }

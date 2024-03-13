@@ -58,11 +58,11 @@ TEST_CASE ("Plugin instance", "[instance]")
     }
 }
 
-#ifdef PAMPLEJUCE_IPP
-    #include <ipp.h>
+// #ifdef PAMPLEJUCE_IPP
+//     #include <ipp.h>
 
-TEST_CASE ("IPP version", "[ipp]")
-{
-    CHECK_THAT (ippsGetLibVersion()->Version, Catch::Matchers::Equals ("2021.10.1 (r0x8e799c51)"));
-}
-#endif
+// TEST_CASE ("IPP version", "[ipp]")
+// {
+//     CHECK_THAT (ippsGetLibVersion()->Version, Catch::Matchers::Equals ("2021.10.1 (r0x8e799c51)"));
+// }
+// #endif

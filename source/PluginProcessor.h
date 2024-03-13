@@ -9,9 +9,9 @@
 
 static constexpr auto numBridgeChans = 8;
 
-#if (MSVC)
-    #include "ipps.h"
-#endif
+// #if (MSVC)
+//     #include "ipps.h"
+// #endif
 
 class PluginProcessor : public juce::AudioProcessor, public juce::AudioProcessorValueTreeState::Listener
 

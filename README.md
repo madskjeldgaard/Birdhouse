@@ -51,6 +51,10 @@ See the [manual](manual/birdhouse-manual.pdf).
 
 This project was generated using [Cookiejuce](github.com/madskjeldgaard/Cookiejuce).
 
+## Supporting the project
+
+If you find this project useful and want to support it, please consider supporting it by [buying me a coffee](https://ko-fi.com/madskjeldgaard).
+
 ## Building
 
 Download source code (make sure eto include submodules):

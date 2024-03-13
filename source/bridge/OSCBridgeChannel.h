@@ -7,9 +7,9 @@
 namespace birdhouse
 {
     enum MsgType {
-        MidiNote = 0,
-        MidiCC = 1,
-        MidiBend = 2,
+        MidiCC,
+        MidiNote,
+        MidiBend,
         NumMsgTypes
     };
 

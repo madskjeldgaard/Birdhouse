@@ -308,8 +308,8 @@ private:
         };
 
         outputMsgTypeComboBox.setColour (juce::ComboBox::arrowColourId, BirdHouse::Colours::fg);
-        outputMsgTypeComboBox.addItem ("Note", birdhouse::MsgType::MidiNote + 1);
         outputMsgTypeComboBox.addItem ("CC", birdhouse::MsgType::MidiCC + 1);
+        outputMsgTypeComboBox.addItem ("Note", birdhouse::MsgType::MidiNote + 1);
         outputMsgTypeComboBox.addItem ("Bend", birdhouse::MsgType::MidiBend + 1);
         outputMsgTypeComboBox.setSelectedItemIndex (birdhouse::MsgType::MidiNote, juce::dontSendNotification);
         addAndMakeVisible (outputMsgTypeComboBox);

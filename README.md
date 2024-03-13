@@ -53,6 +53,13 @@ This project was generated using [Cookiejuce](github.com/madskjeldgaard/Cookieju
 
 ## Building
 
+Download source code (make sure eto include submodules):
+
+```bash
+git clone --recurse-submodules  https://github.com/madskjeldgaard/Birdhouse.git
+cd Birdhouse
+```
+
 Configure:
 ```bash
 cmake -S . -B build

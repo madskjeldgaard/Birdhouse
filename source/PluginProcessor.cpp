@@ -293,7 +293,7 @@ void PluginProcessor::setStateChangeCallbacks()
             {
                 DBG ("State changed: " + whatChanged.toString() + " " + state.getType().toString() + " chan" + juce::String (chanNum));
                 auto pathFallbackValue = juce::String ("/" + juce::String (chanNum) + "/value");
-                auto newPath = state.getProperty (pathIdentifier, pathFallbackValue);
+                auto newPath = state.getProperty (pathIdentifier, pathFallbackValue).toString();
                 auto newInMin = state.getProperty (inMinIdentifier, 0.0f);
                 auto newInMax = state.getProperty (inMaxIdentifier, 1.0f);
 

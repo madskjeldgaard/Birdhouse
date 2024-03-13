@@ -60,12 +60,12 @@ public:
         pathEditor.setText (path);
     }
 
-    void setInMin (auto min)
+    void setInMin (float min)
     {
         inputMinEditor.setText (juce::String (min));
     }
 
-    void setInMax (auto max)
+    void setInMax (float max)
     {
         inputMaxEditor.setText (juce::String (max));
     }
@@ -95,7 +95,7 @@ public:
         activityIndicator.addValue (chan.getNormalizedValue());
     }
 
-    void addActivity (auto newValue)
+    void addActivity (float newValue)
     {
         activityIndicator.addValue (newValue);
     }

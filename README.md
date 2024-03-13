@@ -1,3 +1,5 @@
+[![Build](https://github.com/madskjeldgaard/Birdhouse/actions/workflows/cmake_build.yml/badge.svg)](https://github.com/madskjeldgaard/Birdhouse/actions/workflows/cmake_build.yml)
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X6RXV10)
 
 # BirdHouse

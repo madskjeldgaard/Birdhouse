@@ -277,8 +277,8 @@ void PluginProcessor::setStateChangeCallbacks()
         if (whatChanged == juce::Identifier ("ConnectionStatus"))
         {
             auto fallbackValue = false;
-            auto newStatus = state.getProperty ("ConnectionStatus", fallbackValue);
-            juce::Logger::writeToLog ("Connection status changed to " + juce::String (newStatus));
+            auto newStatus = state.getProperty ("ConnectionStatus", fallbackValue).toString();
+            juce::Logger::writeToLog ("Connection status changed to " + newStatus);
             return;
         }
 

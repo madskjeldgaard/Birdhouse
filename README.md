@@ -55,7 +55,14 @@ This project was generated using [Cookiejuce](github.com/madskjeldgaard/Cookieju
 
 If you find this project useful and want to support it, please consider supporting it by [buying me a coffee](https://ko-fi.com/madskjeldgaard).
 
-## Building
+## Build and install
+
+### Prerequisites
+
+- CMake
+- [git lfs](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
+
+### Building
 
 Download source code (make sure eto include submodules):
 

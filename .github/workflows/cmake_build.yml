@@ -28,18 +28,18 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
+      fail-fast: true # show all errors for each platform (vs. cancel jobs on error)
       matrix:
         include:
           - name: Linux
             os: ubuntu-22.04
             pluginval-binary: ./pluginval
-          # - name: macOS
-          #   os: macos-14
-          #   pluginval-binary: pluginval.app/Contents/MacOS/pluginval
           - name: Windows
             os: windows-latest
             pluginval-binary: ./pluginval.exe
+          - name: macOS
+            os: macos-latest
+            pluginval-binary: ./pluginval
 
     steps:
 
@@ -58,29 +58,6 @@ jobs:
         # see: https://github.com/actions/runner-images/issues/8659
         sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.6 libc6-dev=2.35-0ubuntu3.6 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
         sudo /usr/bin/Xvfb $DISPLAY &
-
-    # - name: Cache IPP (Windows)
-    #   if: runner.os == 'Windows'
-    #   id: cache-ipp
-    #   uses: actions/cache@v3
-    #   with:
-    #     key: ipp-v4
-    #     path: C:\Program Files (x86)\Intel
-
-    # - name: Install IPP (Windows)
-    #   if: (runner.os == 'Windows') && (steps.cache-ipp.outputs.cache-hit != 'true')
-    #   shell: bash
-    #   run: |
-    #     curl --output oneapi.exe https://registrationcenter-download.intel.com/akdlm/IRC_NAS/8d158661-ca8f-4e66-b5ea-3e0b3d00836a/w_ipp_oneapi_p_2021.10.1.15_offline.exe
-    #     ./oneapi.exe -s -x -f oneapi
-    #     ./oneapi/bootstrapper.exe -s -c --action install --components=intel.oneapi.win.ipp.devel --eula=accept -p=NEED_VS2022_INTEGRATION=1 --log-dir=.
-
-    # - name: Save IPP cache (even on CI fail)
-    #   if: runner.os == 'Windows' && (steps.cache-ipp.outputs.cache-hit != 'true')
-    #   uses: actions/cache/save@v3
-    #   with:
-    #     path: C:\Program Files (x86)\Intel
-    #     key: ipp-v4
 
     - name: Install Ninja (Windows)
       if: runner.os == 'Windows'
@@ -109,13 +86,6 @@ jobs:
 
     - name: Cache the build
       uses: mozilla-actions/sccache-action@v0.0.3
-
-    - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@v2 # only exists as a tag right now
-      if: ${{ matrix.name == 'macOS' }}
-      with:
-        p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
-        p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
 
     - name: Configure
       shell: bash
@@ -153,66 +123,17 @@ jobs:
         7z x pluginval_${{ matrix.name }}.zip
         ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
 
-    - name: Codesign (macOS)
-      if: ${{ matrix.name == 'macOS' }}
-      run: |
-        # Each plugin must be code signed
-        codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
-        codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --timestamp
-        codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
-
-    - name: Add Custom Icons (macOS)
-      if: ${{ matrix.name == 'macOS' }}
-      run: |
-        # add the icns as its own icon resource (meta!)
-        sips -i packaging/pamplejuce.icns
-
-        # Grab the resource, put in tempfile
-        DeRez -only icns packaging/pamplejuce.icns > /tmp/icons
-
-        # Stuff the resource into the strange Icon? file's resource fork
-        Rez -a /tmp/icons -o "${{ env.VST3_PATH }}/Icon"$'\r'
-        Rez -a /tmp/icons -o "${{ env.AU_PATH }}/Icon"$'\r'
-
-        # Set custom icon attribute
-        SetFile -a C "${{ env.VST3_PATH }}"
-        SetFile -a C "${{ env.AU_PATH }}"
-
-    - name: Create DMG, Notarize and Staple (macOS)
-      if: ${{ matrix.name == 'macOS' }}
-      run: |
-        # workaround for https://github.com/LinusU/node-appdmg/issues/234
-        python3 -m pip install setuptools
-        npm install -g appdmg
-        mkdir -p packaging/dmg
-
-        # Create directories for the dmg symlinks
-        sudo mkdir -m 755 -p /Library/Audio/Plug-Ins/Components && sudo mkdir -m 755 -p /Library/Audio/Plug-Ins/VST3
-        ln -s /Library/Audio/Plug-Ins/Components "packaging/dmg/Your Mac's Component folder"
-        ln -s /Library/Audio/Plug-Ins/VST3 "packaging/dmg/Your Mac's VST3 folder"
-        mv "${{ env.VST3_PATH }}" packaging/dmg
-        mv "${{ env.AU_PATH }}" packaging/dmg
-        mv "${{ env.STANDALONE_PATH }}" packaging/dmg
-
-        # Run appdmg to create the .dmg
-        cd packaging && appdmg dmg.json "${{ env.ARTIFACT_NAME}}.dmg"
-        codesign -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" --timestamp -i ${{ env.BUNDLE_ID }} --force "${{ env.ARTIFACT_NAME }}.dmg"
-        xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.dmg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
-        xcrun stapler staple "${{ env.ARTIFACT_NAME }}.dmg"
-
     - name: Zip
       if: ${{ matrix.name == 'Linux' }}
       working-directory: ${{ env.ARTIFACTS_PATH }}
       run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" .
 
-    - name: Generate Installer and Sign with EV cert on Azure (Windows)
+    - name: Generate Installer (Windows)
       if: ${{ matrix.name == 'Windows' }}
       shell: bash
       run: |
         iscc "packaging\installer.iss"
         mv "packaging/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
-        # dotnet tool install --global AzureSignTool
-        # AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
 
     - name: Upload Exe (Windows)
       if: ${{ matrix.name == 'Windows' }}
@@ -228,12 +149,12 @@ jobs:
         name: ${{ env.ARTIFACT_NAME }}.zip
         path: '${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip'
 
-    - name: Upload DMG (macOS)
+    - name: Upload Standalone (macOS)
       if: ${{ matrix.name == 'macOS' }}
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.ARTIFACT_NAME }}.dmg
-        path: packaging/${{ env.ARTIFACT_NAME }}.dmg
+        name: ${{ env.ARTIFACT_NAME }}.app
+        path: '${{ env.STANDALONE_PATH }}'
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -253,4 +174,4 @@ jobs:
         files: |
           */*.exe
           */*.zip
-          */*.dmg
+          */*.app

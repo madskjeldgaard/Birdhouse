@@ -309,7 +309,7 @@ void PluginProcessor::setStateChangeCallbacks()
 // This gets all parameters from the apvts and updates the channels accordingly.
 void PluginProcessor::updateChannelsFromParams()
 {
-    juce::Logger::writeToLog ("Updating channels from parameters");
+    DBG("Updating channels from parameters");
     for (auto chanNum = 1; chanNum <= numBridgeChans; chanNum++)
     {
         // Identifiers

@@ -38,9 +38,8 @@ jobs:
             os: windows-latest
             pluginval-binary: ./pluginval.exe
           - name: macOS
-            os: macos-latest
-            pluginval-binary: ./pluginval
-
+            os: macos-14
+            pluginval-binary: pluginval.app/Contents/MacOS/pluginval
     steps:
 
     # This is just easier than debugging different compilers on different platforms

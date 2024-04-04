@@ -7,7 +7,7 @@
 
 ![Birdhouse in action](manual/bitwigcc.png) 
 
-With BirdHouse you can send OSC messages to a DAW or plugin host and have them converted to MIDI.
+With BirdHouse you can receive OSC messages with a DAW or plugin host and have them converted to MIDI.
 
 The Birdhouse OSC to MIDI plugin is a simple plugin that listens for OSC messages, processes their data and sends outputs it as MIDI to allow using it in a DAW or other plugin host environment. Each instance of Birdhouse is able to process a stream of OSC messages to a MIDI event type, with a visualization of the stream and the ability to mute/unmute the output data. 
 

@@ -58,10 +58,11 @@ public:
     //     juce::Logger::writeToLog ("ValueTree child order changed");
     // }
 
-    // // Called when a ValueTree is removed
+    // // Called when a ValueTree is changed
     // void valueTreeParentChanged (juce::ValueTree& treeWhoseParentHasChanged) override
     // {
-    //     juce::Logger::writeToLog ("ValueTree parent changed");
+    //     DBG ("ValueTree parent changed");
+    //     mChangedCallback (treeWhoseParentHasChanged.getType());
     // }
 
     // // Called when a ValueTree is removed
@@ -72,6 +73,12 @@ public:
 
     void setState (juce::ValueTree newState)
     {
+        DBG ("Setting new state in lambda state");
+        if (!newState.isValid())
+        {
+            DBG ("New state in lambda state is invalid");
+        }
+
         if (newState.isValid())
         {
             mChannelState.removeListener (this);

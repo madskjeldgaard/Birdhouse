@@ -48,7 +48,7 @@ namespace birdhouse
     };
 
     /**
-     * @class OSCMessageReceiver
+     * @class BridgeOSCMessageReceiver
      * @brief Responsible for keeping track of OSC callbacks and dispatching messages to them
      *
      */
@@ -62,11 +62,12 @@ namespace birdhouse
         }
         void handleOSCMessage (const juce::OSCMessage& message)
         {
-            juce::Logger::writeToLog ("Received OSC message: " + message.getAddressPattern().toString() + " with " + juce::String (message.size()) + " arguments");
+            DBG ("Received OSC message: " + message.getAddressPattern().toString() + " with " + juce::String (message.size()) + " arguments");
 
             auto messageAccepted = message.size() == 1 && (message[0].isFloat32() || message[0].isInt32());
             auto rawValue = 0.f;
 
+            DBG ("MSG accepted: " + juce::String (static_cast<int> (messageAccepted)));
             // Retrieve the value from the message
             if (messageAccepted)
             {
@@ -94,7 +95,7 @@ namespace birdhouse
     };
 
     /**
-     * @class MidiBufferManager
+     * @class BridgeMidiBufferManager
      * @brief Manages a buffer of MIDI messages
      *
      */
@@ -265,6 +266,7 @@ namespace birdhouse
         OSCBridgeChannel (const juce::String& path, float fromMin, float fromMax, int outputMidiChannel, int outputNum, MsgType outputType)
             : mState (path, fromMin, fromMax, outputMidiChannel, outputNum, outputType)
         {
+            DBG ("Contructing bridge channel");
             // Register callback that will be called when an OSC message is received
             this->addOSCCallback (
                 [this] (float rawValue, bool messageAccepted, const juce::OSCMessage& oscMessage) {
@@ -279,7 +281,7 @@ namespace birdhouse
                     }
                 });
 
-            juce::Logger::writeToLog ("Set up bridge channel with path: " + mState.path() + " and output channel: " + juce::String (mState.outChan()) + " and output number: " + juce::String (mState.outNum()) + " and output type: " + juce::String (mState.outType()) + " and input min: " + juce::String (mState.inMin()) + " and input max: " + juce::String (mState.inMax()));
+            DBG ("Set up bridge channel with path: " + mState.path() + " and output channel: " + juce::String (mState.outChan()) + " and output number: " + juce::String (mState.outNum()) + " and output type: " + juce::String (mState.outType()) + " and input min: " + juce::String (mState.inMin()) + " and input max: " + juce::String (mState.inMax()));
         }
 
         auto& state() { return mState; }

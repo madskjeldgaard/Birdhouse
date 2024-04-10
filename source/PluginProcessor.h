@@ -62,6 +62,7 @@ public:
     void updateListenerStates();
     void setStateChangeCallbacks();
     void updateChannelsFromParams();
+    void updateValuesFromNonAudioParams (auto state);
 
     // Parameters
     juce::AudioProcessorValueTreeState parameters { *this, nullptr, "Parameters", birdhouse::BirdHouseParams<numBridgeChans>::createParameterLayout() };

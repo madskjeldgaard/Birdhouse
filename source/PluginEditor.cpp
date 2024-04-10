@@ -3,6 +3,7 @@
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
+    DBG ("Constructing PluginEditor");
     // Set default look and feel
     lookAndFeel = std::make_unique<BirdHouse::BirdHouseLookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel (lookAndFeel.get());

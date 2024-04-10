@@ -96,6 +96,10 @@ namespace birdhouse
                 {
                     channel->handleOSCMessage (message);
                 }
+                else
+                {
+                    DBG ("Channel does not match path: " + channel->state().path());
+                }
             }
         }
 

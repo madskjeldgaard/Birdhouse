@@ -30,9 +30,6 @@ private:
     std::unique_ptr<OSCBridgeChannelLabels> oscBridgeChannelLabels;
 
     // Link to help / info
-    // juce::HyperlinkButton hyperlinkButton { "?", juce::URL { "https://github.com/madskjeldgaard/Birdhouse" } };
-
-    // Link to help / info
     AboutComponent aboutComponent;
     juce::TextButton aboutButton { "?" };
 

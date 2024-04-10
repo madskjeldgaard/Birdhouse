@@ -51,7 +51,9 @@ If you test the plugin in one of the untested or unmentioned hosts, please open 
 
 # Usage
 
-See the [manual](manual/birdhouse-manual.pdf).
+[![Birdhouse in action](http://img.youtube.com/vi/Of1s9zzU6Jo/0.jpg)](http://www.youtube.com/watch?v=Of1s9zzU6Jo)
+
+See the [manual](manual/birdhouse-manual.pdf) or check out this [tutorial on YouTube](http://www.youtube.com/watch?v=Of1s9zzU6Jo).
 
 # Development
 

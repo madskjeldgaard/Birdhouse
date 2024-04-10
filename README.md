@@ -13,6 +13,10 @@ The Birdhouse OSC to MIDI plugin is a simple plugin that listens for OSC message
 
 The need for this plugin arose from having to make different projects that rely on OSC communication to generate notes or affect sound parameters. Often this was solved with middlewares written in one of the common computer music languages, with varying levels of success and then passed on to different Digital Audio Workstations with even more varying levels of success. The thing is, different software process OSC messages with different priority levels. This can be annoying in interactive art since we sometimes want to blast software with values from sensors, other software or from wherever, and be able to expect pretty consistent results. Birdhouse attempts to solve this.
 
+
+[![Birdhouse in action](http://img.youtube.com/vi/Of1s9zzU6Jo/0.jpg)](http://www.youtube.com/watch?v=Of1s9zzU6Jo)
+
+
 ## Features
 
 - Convert OSC to MIDI inside any DAW or plugin host

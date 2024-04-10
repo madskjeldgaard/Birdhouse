@@ -121,7 +121,7 @@ namespace birdhouse
         {
             // FIXME: Without this lock, bad memory access segfaults will happen because the OSC thread is running realtime and writing to the midi buffer
             const juce::ScopedLock lock (mCriticalSection); // Lock while reading/modifying
-            processBlockBuffer.addEvents (mInternalBuffer, sampleNum, -1, 0);
+            processBlockBuffer.addEvents (mInternalBuffer, 0, -1, sampleNum);
 
             mInternalBuffer.clear();
         }

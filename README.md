@@ -37,6 +37,7 @@ The need for this plugin arose from having to make different projects that rely 
 Tested and working in:
 - ✅ Reaper
 - ✅ BitWig
+- ✅ Ardour (see [this for more info on setup](https://github.com/madskjeldgaard/Birdhouse/issues/45))
 
 Untested: 
 - ✖️ Ableton Live

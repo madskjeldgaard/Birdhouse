@@ -39,13 +39,13 @@ PluginProcessor::PluginProcessor()
             path, inMin, inMax, outChan, outNum, static_cast<birdhouse::MsgType> (static_cast<int> (msgType))));
 
         DBG ("Initial state of channel " + juce::String (i) + " is :");
-        DBG ("Path: " + juce::String (path));
-        DBG ("InMin: " + juce::String (inMin));
-        DBG ("InMax: " + juce::String (inMax));
-        DBG ("OutChan: " + juce::String (outChan));
-        DBG ("OutNum: " + juce::String (outNum));
-        DBG ("MsgType: " + juce::String (msgType));
-        DBG ("Muted: " + juce::String (muted));
+        DBG ("Path: " + path.toString());
+        DBG ("InMin: " + inMin.toString());
+        DBG ("InMax: " + inMax.toString());
+        DBG ("OutChan: " + outChan.toString());
+        DBG ("OutNum: " + outNum.toString());
+        DBG ("MsgType: " + msgType.toString());
+        DBG ("Muted: " + muted.toString());
 
         // Set mute
         mOscBridgeChannels[index]->state().setMuted (muted);
